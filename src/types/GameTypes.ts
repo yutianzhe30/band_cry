@@ -1,0 +1,1 @@
+// GameTypes definitions here
