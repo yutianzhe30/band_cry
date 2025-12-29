@@ -1,0 +1,33 @@
+{
+  "startPage": {
+    "title": "Band Cry",
+    "startGame": "Start Game",
+    "introduction": "Introduction",
+    "settings": "Settings"
+  },
+  "introductionPage": {
+    "title": "Introduction",
+    "content": "This is the introduction page for Band Cry.",
+    "back": "Back"
+  },
+  "settingsPage": {
+    "title": "Settings",
+    "content": "This is the settings page for Band Cry.",
+    "language": "Language",
+    "back": "Back"
+  },
+  "characterCreationPage": {
+    "title": "Create Your Character",
+    "gender": "Gender",
+    "instrument": "Instrument",
+    "male": "Male",
+    "female": "Female",
+    "guitar": "Guitar",
+    "bass": "Bass",
+    "keyboard": "Keyboard",
+    "vocal": "Vocal",
+    "drum": "Drum",
+    "confirm": "Confirm",
+    "back": "Back"
+  }
+}

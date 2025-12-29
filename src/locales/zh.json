@@ -1,0 +1,33 @@
+{
+  "startPage": {
+    "title": "乐队的呐喊",
+    "startGame": "开始游戏",
+    "introduction": "游戏介绍",
+    "settings": "设置"
+  },
+  "introductionPage": {
+    "title": "游戏介绍",
+    "content": "这里是《乐队的呐喊》的游戏介绍页面。",
+    "back": "返回"
+  },
+  "settingsPage": {
+    "title": "设置",
+    "content": "这里是《乐队的呐喊》的设置页面。",
+    "language": "语言",
+    "back": "返回"
+  },
+  "characterCreationPage": {
+    "title": "创建你的角色",
+    "gender": "性别",
+    "instrument": "乐器",
+    "male": "男",
+    "female": "女",
+    "guitar": "吉他",
+    "bass": "贝斯",
+    "keyboard": "键盘",
+    "vocal": "主唱",
+    "drum": "鼓",
+    "confirm": "确认",
+    "back": "返回"
+  }
+}

@@ -1,12 +1,15 @@
 <template>
   <div class="introduction-page">
-    <h1>Introduction</h1>
-    <p>This is the introduction page for Band Cry.</p>
-    <button @click="goBack">Back</button>
+    <h1>{{ t('introductionPage.title') }}</h1>
+    <p>{{ t('introductionPage.content') }}</p>
+    <button @click="goBack">{{ t('introductionPage.back') }}</button>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const emit = defineEmits(['back']);
 
 function goBack() {

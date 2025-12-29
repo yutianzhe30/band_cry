@@ -2,16 +2,19 @@
   <div class="start-page" :style="pageStyle">
     <audio v-if="bgm" :src="bgm" autoplay loop></audio>
     <div class="title-container">
-      <h1 class="title">Band Cry</h1>
-      <button class="start-button" @click="startGame">Start Game</button>
-      <button class="start-button" @click="showIntroduction">Introduction</button>
-      <button class="start-button" @click="showSettings">Settings</button>
+      <h1 class="title">{{ t('startPage.title') }}</h1>
+      <button class="start-button" @click="startGame">{{ t('startPage.startGame') }}</button>
+      <button class="start-button" @click="showIntroduction">{{ t('startPage.introduction') }}</button>
+      <button class="start-button" @click="showSettings">{{ t('startPage.settings') }}</button>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
   backgroundImage: {

@@ -9,7 +9,12 @@
     />
     <IntroductionPage v-else-if="currentPage === 'introduction'" @back="goBackToStart" />
     <SettingsPage v-else-if="currentPage === 'settings'" @back="goBackToStart" />
-    <MainGame v-else-if="currentPage === 'game'" />
+    <CharacterCreationPage
+      v-else-if="currentPage === 'character-creation'"
+      @character-created="characterCreated"
+      @back="goBackToStart"
+    />
+    <MainGame v-else-if="currentPage === 'game'" :character="playerCharacter" />
   </div>
 </template>
 
@@ -18,12 +23,19 @@ import { ref } from 'vue';
 import StartPage from './components/StartPage.vue';
 import IntroductionPage from './components/IntroductionPage.vue';
 import SettingsPage from './components/SettingsPage.vue';
+import CharacterCreationPage from './components/CharacterCreationPage.vue';
+import MainGame from './components/MainGame.vue';
 import probeRoomImage from './assets/images/ProbeRoom1.png';
-//import MainGame from './components/MainGame.vue';
 
 const currentPage = ref('start');
+const playerCharacter = ref(null);
 
 function startGame() {
+  currentPage.value = 'character-creation';
+}
+
+function characterCreated(character) {
+  playerCharacter.value = character;
   currentPage.value = 'game';
 }
 
