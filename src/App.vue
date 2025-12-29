@@ -5,6 +5,7 @@
       @start-game="startGame"
       @show-introduction="showIntroduction"
       @show-settings="showSettings"
+      :background-image="probeRoomImage"
     />
     <IntroductionPage v-else-if="currentPage === 'introduction'" @back="goBackToStart" />
     <SettingsPage v-else-if="currentPage === 'settings'" @back="goBackToStart" />
@@ -17,6 +18,7 @@ import { ref } from 'vue';
 import StartPage from './components/StartPage.vue';
 import IntroductionPage from './components/IntroductionPage.vue';
 import SettingsPage from './components/SettingsPage.vue';
+import probeRoomImage from './assets/images/ProbeRoom1.png';
 //import MainGame from './components/MainGame.vue';
 
 const currentPage = ref('start');

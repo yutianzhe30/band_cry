@@ -1,5 +1,5 @@
 <template>
-  <div class="start-page">
+  <div class="start-page" :style="pageStyle">
     <audio v-if="bgm" :src="bgm" autoplay loop></audio>
     <div class="title-container">
       <h1 class="title">Band Cry</h1>
@@ -11,7 +11,13 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+
 const props = defineProps({
+  backgroundImage: {
+    type: String,
+    default: '',
+  },
   bgm: {
     type: String,
     default: '',
@@ -19,6 +25,10 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['start-game', 'show-introduction', 'show-settings']);
+
+const pageStyle = computed(() => ({
+  backgroundImage: props.backgroundImage ? `url(${props.backgroundImage})` : 'none',
+}));
 
 function startGame() {
   emit('start-game');
@@ -39,7 +49,6 @@ function showSettings() {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: black;
   background-size: cover;
   background-position: center;
   text-align: center;
