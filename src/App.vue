@@ -1,19 +1,40 @@
 <template>
   <div id="app">
-    <StartPage v-if="!gameStarted" @start-game="startGame" :background-image="'/vite.svg'" />
-    <MainGame v-else />
+    <StartPage
+      v-if="currentPage === 'start'"
+      @start-game="startGame"
+      @show-introduction="showIntroduction"
+      @show-settings="showSettings"
+    />
+    <IntroductionPage v-else-if="currentPage === 'introduction'" @back="goBackToStart" />
+    <SettingsPage v-else-if="currentPage === 'settings'" @back="goBackToStart" />
+    <MainGame v-else-if="currentPage === 'game'" />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import StartPage from './components/StartPage.vue';
+import IntroductionPage from './components/IntroductionPage.vue';
+import SettingsPage from './components/SettingsPage.vue';
 //import MainGame from './components/MainGame.vue';
 
-const gameStarted = ref(false);
+const currentPage = ref('start');
 
 function startGame() {
-  gameStarted.value = true;
+  currentPage.value = 'game';
+}
+
+function showIntroduction() {
+  currentPage.value = 'introduction';
+}
+
+function showSettings() {
+  currentPage.value = 'settings';
+}
+
+function goBackToStart() {
+  currentPage.value = 'start';
 }
 </script>
 
@@ -24,5 +45,7 @@ function startGame() {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  background-color: black;
+  height: 100vh;
 }
 </style>

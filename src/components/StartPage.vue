@@ -1,35 +1,35 @@
 <template>
-  <div class="start-page" :style="pageStyle">
+  <div class="start-page">
     <audio v-if="bgm" :src="bgm" autoplay loop></audio>
     <div class="title-container">
       <h1 class="title">Band Cry</h1>
       <button class="start-button" @click="startGame">Start Game</button>
+      <button class="start-button" @click="showIntroduction">Introduction</button>
+      <button class="start-button" @click="showSettings">Settings</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
-
 const props = defineProps({
-  backgroundImage: {
-    type: String,
-    default: '',
-  },
   bgm: {
     type: String,
     default: '',
   },
 });
 
-const emit = defineEmits(['start-game']);
-
-const pageStyle = computed(() => ({
-  backgroundImage: props.backgroundImage ? `url(${props.backgroundImage})` : 'none',
-}));
+const emit = defineEmits(['start-game', 'show-introduction', 'show-settings']);
 
 function startGame() {
   emit('start-game');
+}
+
+function showIntroduction() {
+  emit('show-introduction');
+}
+
+function showSettings() {
+  emit('show-settings');
 }
 </script>
 
@@ -39,6 +39,7 @@ function startGame() {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  background-color: black;
   background-size: cover;
   background-position: center;
   text-align: center;
@@ -66,6 +67,7 @@ function startGame() {
   color: white;
   cursor: pointer;
   transition: background-color 0.3s;
+  margin-left: 1rem;
 }
 
 .start-button:hover {
