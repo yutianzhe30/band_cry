@@ -29,5 +29,10 @@
     "drum": "Drum",
     "confirm": "Confirm",
     "back": "Back"
+  },
+  "characterStories": {
+    "Male-Guitar": "A restless spirit with a worn-out Fender, he learned to play by mimicking old blues records. He seeks fame not for the money, but for the freedom to never be tied down again.",
+    "Female-Vocal": "Classically trained but with a punk rock heart, her voice can be a gentle whisper or a defiant roar. She writes lyrics about the city's hidden stories and broken dreams.",
+    "default": "Select a gender and instrument to see their story."
   }
 }
