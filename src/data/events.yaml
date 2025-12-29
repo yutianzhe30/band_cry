@@ -1,1 +1,19 @@
-# Events data will be stored here
+- id: event_001_broken_string
+  title: 演出事故
+  description: 在 Livehouse 演出时，你的吉他弦突然断了。
+  visual: bg_livehouse_dark.jpg
+  trigger:
+    type: random
+    probability: 0.05
+    condition: "role == 'guitarist' && technique < 50"
+  choices:
+    - text: 硬着头皮演下去
+      effect:
+        fame: -5
+        stress: 10
+        technique: 1
+    - text: 尝试即兴 Solo 掩盖
+      requirement: "technique >= 40"
+      effect:
+        fame: 10
+        chemistry: 5
