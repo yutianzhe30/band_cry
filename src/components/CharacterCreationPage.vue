@@ -1,5 +1,5 @@
 <template>
-  <div class="character-creation-page">
+  <div class="character-creation-page" :style="pageStyle">
     <div class="character-preview">
       <div class="preview-content">
         <img v-if="currentCharacter.image" :src="currentCharacter.image" alt="Character Preview" class="character-image">
@@ -49,6 +49,13 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const emit = defineEmits(['character-created', 'back']);
 
+const props = defineProps({
+  backgroundImage: {
+    type: String,
+    default: '',
+  },
+});
+
 const genders = ref(['Male', 'Female']);
 const instruments = ref(['Guitar', 'Bass', 'Keyboard', 'Vocal', 'Drum']);
 
@@ -56,6 +63,12 @@ const selectedGender = ref(null);
 const selectedInstrument = ref(null);
 
 const isSelectionComplete = computed(() => selectedGender.value && selectedInstrument.value);
+
+const pageStyle = computed(() => ({
+  backgroundImage: props.backgroundImage ? `url(${props.backgroundImage})` : 'none',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+}));
 
 const currentCharacter = computed(() => {
   if (!selectedGender.value || !selectedInstrument.value) {
@@ -108,33 +121,56 @@ function goBack() {
 
 .character-preview {
   flex: 1;
-  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
+  justify-content: flex-end; /* Align image to the bottom */
+  align-items: flex-start; /* Align content to the left */
+  padding: 0 0 0 2rem; /* Remove top/right/bottom padding, keep some left padding */
+  background-color: transparent;
+  overflow: hidden; /* Hide overflow if image goes slightly out */
+  position: relative;
 }
 
 .preview-content {
-  max-width: 400px;
+  width: 100%;
+  height: 100%; /* Allow content to take full height */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Push image and text to bottom */
+  align-items: flex-start; /* Align content to the left */
+  position: relative;
+  max-width: unset; /* Remove max-width constraint */
 }
 
 .character-image {
-  width: 100%;
-  height: auto;
+  width: auto; /* Allow natural width based on aspect ratio */
+  height: 120%; /* Take up most of the height of the preview area */
+  max-width: 120%; /* Ensure it doesn't exceed 90% of its container's width */
+  max-height : 120vh;
+  object-fit: scale-down; /* Scale down if larger, otherwise show full size */
+  position: absolute;
+  bottom: -10%;
+  left: 0;
+  transform: translateX(-10%); /* Shift left a bit to be more on the edge */
   border-radius: 1rem;
   margin-bottom: 1rem;
-  border: 2px solid #4CAF50;
+  border: none; /* Remove border from image itself */
+  z-index: 1; /* Ensure image is above other elements if needed */
 }
 
 .image-placeholder {
-  width: 100%;
-  padding-top: 100%; /* 1:1 Aspect Ratio */
+  width: auto;
+  height: 90%;
+  max-width: 90%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-10%);
   border-radius: 1rem;
   margin-bottom: 1rem;
   border: 2px dashed #555;
   background-color: rgba(255, 255, 255, 0.05);
+  z-index: 1;
 }
 
 .story {
@@ -142,6 +178,13 @@ function goBack() {
   line-height: 1.6;
   font-style: italic;
   color: #ccc;
+  background-color: rgba(0, 0, 0, 0.7); /* Slightly more opaque background */
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  text-align: left; /* Align text to the left */
+  margin-left: 2rem; /* Indent story a bit */
+  z-index: 2; /* Ensure story is above image if they overlap */
+  max-width: 80%; /* Limit width of story text */
 }
 
 .form-container {
@@ -150,7 +193,7 @@ function goBack() {
   flex-direction: column;
   justify-content: center;
   padding: 3rem;
-  background-color: rgba(10, 10, 10, 0.7);
+  background-color: rgba(10, 10, 10, 0.9); /* Even more opaque for contrast */
 }
 
 .title {

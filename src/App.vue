@@ -13,6 +13,7 @@
       v-else-if="currentPage === 'character-creation'"
       @character-created="characterCreated"
       @back="goBackToStart"
+      :background-image="probeRoomImage"
     />
     <MainGame v-else-if="currentPage === 'game'" :character="playerCharacter" />
   </div>
