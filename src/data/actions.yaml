@@ -1,0 +1,76 @@
+- id: practice
+  name: 精进琴技
+  description: "日复一日的练习是通往大师的唯一道路。"
+  cost: # AP cost
+    ap: 1
+  effects:
+    - stat: technique
+      op: add
+      value: 2 # Base value
+    - stat: sanity
+      op: subtract
+      value: 1
+
+- id: compose
+  name: 创作新歌
+  description: "将脑海中的旋律变为现实。"
+  cost:
+    ap: 1
+  effects:
+    # This would likely trigger a different mechanic, maybe add to a 'song_progress' stat
+    - stat: artistic_integrity
+      op: add
+      value: 1
+
+- id: gig
+  name: 寻找演出
+  description: "是时候登上舞台了。"
+  cost:
+    ap: 1
+  effects:
+    # This is a good candidate for triggering a specific event chain
+    - stat: fame
+      op: add
+      value: 1
+
+- id: socialize
+  name: 社交鬼混
+  description: "和朋友们出去玩，或者在圈子里混个脸熟。"
+  cost:
+    ap: 1
+  effects:
+    - stat: band_chemistry
+      op: add
+      value: 2
+    - stat: sanity
+      op: add
+      value: 3
+    - stat: money
+      op: subtract
+      value: 50
+
+- id: work
+  name: 打工赚钱
+  description: "音乐不能当饭吃...至少现在还不能。"
+  cost:
+    ap: 1
+  effects:
+    - stat: money
+      op: add
+      value: 200
+    - stat: health
+      op: subtract
+      value: 1
+
+- id: rest
+  name: 休息放松
+  description: "在崩溃之前好好睡一觉。"
+  cost:
+    ap: 1
+  effects:
+    - stat: health
+      op: add
+      value: 3
+    - stat: sanity
+      op: add
+      value: 5

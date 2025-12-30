@@ -1,11 +1,11 @@
 <template>
   <div class="start-page" :style="pageStyle">
-    <audio v-if="bgm" :src="bgm" autoplay loop></audio>
     <div class="title-container">
       <h1 class="title">{{ t('startPage.title') }}</h1>
       <button class="start-button" @click="startGame">{{ t('startPage.startGame') }}</button>
       <button class="start-button" @click="showIntroduction">{{ t('startPage.introduction') }}</button>
       <button class="start-button" @click="showSettings">{{ t('startPage.settings') }}</button>
+      <button class="start-button debug-button" @click="showDebug">Debug</button>
     </div>
   </div>
 </template>
@@ -21,13 +21,9 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  bgm: {
-    type: String,
-    default: '',
-  },
 });
 
-const emit = defineEmits(['start-game', 'show-introduction', 'show-settings']);
+const emit = defineEmits(['start-game', 'show-introduction', 'show-settings', 'show-debug']);
 
 const pageStyle = computed(() => ({
   backgroundImage: props.backgroundImage ? `url(${props.backgroundImage})` : 'none',
@@ -43,6 +39,10 @@ function showIntroduction() {
 
 function showSettings() {
   emit('show-settings');
+}
+
+function showDebug() {
+  emit('show-debug');
 }
 </script>
 
@@ -84,5 +84,12 @@ function showSettings() {
 
 .start-button:hover {
   background-color: #45a049;
+}
+
+.debug-button {
+  background-color: #ff9800;
+}
+.debug-button:hover {
+  background-color: #f57c00;
 }
 </style>

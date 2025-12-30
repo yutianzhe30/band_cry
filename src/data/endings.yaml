@@ -1,1 +1,65 @@
-# Endings data will be stored here
+- id: ending_27_club
+  title: "27岁俱乐部"
+  description: "你的才华燃烧得太过耀眼。你留下了传奇，也付出了生命的代价，永远停留在了27岁。"
+  trigger:
+    and:
+      - type: age_check
+        is: 27
+      - type: stat_check
+        stat: sanity
+        op: less_than
+        value: 10
+      - type: stat_check
+        stat: health
+        op: less_than
+        value: 10
+      - type: stat_check
+        stat: technique
+        op: greater_than
+        value: 90
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 80
+
+- id: ending_washed_up
+  title: "过气乐手"
+  description: "你的光芒逐渐黯淡，最终只能在小镇的酒吧里翻唱着老歌，怀念过去。你今年35岁。"
+  trigger:
+    and:
+      - type: age_check
+        is: 35
+      - type: stat_check
+        stat: fame
+        op: less_than
+        value: 20
+
+- id: ending_sell_out
+  title: "签约主流，但出卖灵魂"
+  description: "你向商业低头，换来了数不尽的财富，但也失去了创作的初心和快乐。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: signed_major_label
+      - type: stat_check
+        stat: artistic_integrity
+        op: less_than
+        value: 10
+      - type: stat_check
+        stat: money
+        op: greater_than
+        value: 1000000
+
+- id: ending_indie_legend
+  title: "独立传奇"
+  description: "你从未向主流妥协，成为了独立音乐界备受尊敬的传奇。虽然不富裕，但你拥有真正的自由。"
+  trigger:
+    and:
+      - type: age_check
+        is: 30
+      - type: has_flag
+        flag: stayed_indie
+      - type: stat_check
+        stat: artistic_integrity
+        op: greater_than
+        value: 90

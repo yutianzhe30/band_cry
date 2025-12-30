@@ -1,13 +1,13 @@
 {
   "startPage": {
-    "title": "乐队的呐喊",
+    "title": "Band May Cry",
     "startGame": "开始游戏",
     "introduction": "游戏介绍",
     "settings": "设置"
   },
   "introductionPage": {
     "title": "游戏介绍",
-    "content": "这里是《乐队的呐喊》的游戏介绍页面。",
+    "content": "这是一个VibeCoding的文字冒险游戏，所有的素材几乎均是AI生成的。当然也融合了我自己的奇妙想法，现实中的乐队会面临很多挑战，希望在游戏中这一切都更简单",
     "back": "返回"
   },
   "settingsPage": {

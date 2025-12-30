@@ -1,19 +1,77 @@
-- id: event_001_broken_string
-  title: 演出事故
-  description: 在 Livehouse 演出时，你的吉他弦突然断了。
-  visual: bg_livehouse_dark.jpg
+- id: event_guitar_string_breaks
+  description: "演出时你的吉他弦断了！"
   trigger:
-    type: random
-    probability: 0.05
-    condition: "role == 'guitarist' && technique < 50"
+    and:
+      - type: role_check
+        role: Guitar
+      - type: stat_check
+        stat: technique
+        op: less_than
+        value: 40
+      - type: probability
+        chance: 0.3
   choices:
-    - text: 硬着头皮演下去
-      effect:
-        fame: -5
-        stress: 10
-        technique: 1
-    - text: 尝试即兴 Solo 掩盖
-      requirement: "technique >= 40"
-      effect:
-        fame: 10
-        chemistry: 5
+    - text: "硬着头皮演下去"
+      effects:
+        - stat: fame
+          op: subtract
+          value: 5
+        - stat: sanity
+          op: add
+          value: 10
+    - text: "尝试即兴 Solo 掩盖"
+      requirements:
+        - type: stat_check
+          stat: technique
+          op: greater_than_or_equal
+          value: 40
+      effects:
+        - stat: fame
+          op: add
+          value: 10
+
+- id: event_halloween_gig
+  description: "万圣节！一家酒吧邀请你们去做一场主题演出。"
+  trigger:
+    and:
+      - type: date_check
+        month: 10
+        day: 31
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 30
+  choices:
+    - text: "欣然接受"
+      effects:
+        - stat: fame
+          op: add
+          value: 20
+        - stat: money
+          op: add
+          value: 500
+    - text: "拒绝，这太商业了"
+      effects:
+        - stat: artistic_integrity
+          op: add
+          value: 10
+
+- id: event_creative_dispute
+  description: "你和队友在创作上产生了严重分歧..."
+  trigger:
+    and:
+      - type: stat_check
+        stat: band_chemistry # This stat needs to be added to stats.yaml
+        op: less_than
+        value: 20
+  choices:
+    - text: "坚持我的想法才是对的！"
+      effects:
+        - stat: band_chemistry
+          op: subtract
+          value: 10
+    - text: "也许我该听听别人的意见"
+      effects:
+        - stat: band_chemistry
+          op: add
+          value: 10

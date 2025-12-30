@@ -5,6 +5,7 @@
       @start-game="startGame"
       @show-introduction="showIntroduction"
       @show-settings="showSettings"
+      @show-debug="showDebug"
       :background-image="probeRoomImage"
     />
     <IntroductionPage v-else-if="currentPage === 'introduction'" @back="goBackToStart" />
@@ -16,6 +17,7 @@
       :background-image="probeRoomImage"
     />
     <MainGame v-else-if="currentPage === 'game'" :character="playerCharacter" />
+    <DebugPage v-else-if="currentPage === 'debug'" />
   </div>
 </template>
 
@@ -26,6 +28,7 @@ import IntroductionPage from './components/IntroductionPage.vue';
 import SettingsPage from './components/SettingsPage.vue';
 import CharacterCreationPage from './components/CharacterCreationPage.vue';
 import MainGame from './components/MainGame.vue';
+import DebugPage from './components/DebugPage.vue';
 import probeRoomImage from './assets/images/ProbeRoom1.png';
 
 const currentPage = ref('start');
@@ -46,6 +49,10 @@ function showIntroduction() {
 
 function showSettings() {
   currentPage.value = 'settings';
+}
+
+function showDebug() {
+  currentPage.value = 'debug';
 }
 
 function goBackToStart() {

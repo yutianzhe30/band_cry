@@ -8,7 +8,7 @@ const messages = {
 };
 
 const i18n = createI18n({
-  locale: 'en', // set locale
+  locale: 'zh', // set locale
   fallbackLocale: 'en', // set fallback locale
   messages, // set locale messages
   legacy: false, // you must set `false`, to use Composition API
