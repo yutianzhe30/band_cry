@@ -1,5 +1,51 @@
+# ============================================================
+# 游戏事件库 (events.yaml)
+# ============================================================
+
+# ─── 首次演出 ────────────────────────────────────────────────
+- id: event_first_gig_offer
+  oneTime: true
+  description: "一个小型地下室场地的老板联系了你们——他想让你们本周末来演出。舞台只有一张床那么大，观众可能只有十几个人，但这是你们的第一次正式登台。"
+  trigger:
+    and:
+      - type: not_flag
+        flag: played_first_gig
+      - type: stat_check
+        stat: fame
+        op: less_than
+        value: 20
+      - type: probability
+        chance: 0.6
+  choices:
+    - text: "紧张地登台演出"
+      result_text: "你们颤抖着上了台，但第一个和弦响起时，什么都消失了——只剩下音乐。"
+      effects:
+        - stat: fame
+          op: add
+          value: 8
+        - stat: sanity
+          op: subtract
+          value: 5
+        - stat: band_chemistry
+          op: add
+          value: 10
+      flags_add:
+        - played_first_gig
+    - text: "感谢邀请，但我们还没准备好"
+      result_text: "再磨练磨练也许是对的……但那个舞台就这样错过了。"
+      effects:
+        - stat: technique
+          op: add
+          value: 5
+        - stat: sanity
+          op: add
+          value: 3
+      flags_add:
+        - played_first_gig
+
+# ─── 吉他弦断 ────────────────────────────────────────────────
 - id: event_guitar_string_breaks
-  description: "演出时你的吉他弦断了！"
+  description: "演出进行到一半，你的吉他弦突然断了！台下的窃笑声越来越大。"
   trigger:
     and:
       - type: role_check
@@ -7,71 +53,530 @@
       - type: stat_check
         stat: technique
         op: less_than
-        value: 40
+        value: 45
+      - type: has_flag
+        flag: played_first_gig
       - type: probability
-        chance: 0.3
+        chance: 0.35
   choices:
-    - text: "硬着头皮演下去"
+    - text: "硬着头皮演下去，假装什么都没发生"
+      result_text: "观众看出来了，但你的镇定反而赢得了一些尊重。"
       effects:
         - stat: fame
           op: subtract
           value: 5
         - stat: sanity
           op: add
-          value: 10
-    - text: "尝试即兴 Solo 掩盖"
-      requirements:
-        - type: stat_check
-          stat: technique
-          op: greater_than_or_equal
-          value: 40
+          value: 5
+    - text: "尝试用断弦即兴 Solo 掩盖"
+      result_text: "你的指法在颤抖，但那段混乱的Solo意外地有一种raw的美感。"
       effects:
         - stat: fame
           op: add
           value: 10
+        - stat: technique
+          op: add
+          value: 3
+        - stat: sanity
+          op: subtract
+          value: 8
 
+# ─── 创作分歧 ────────────────────────────────────────────────
+- id: event_creative_dispute
+  description: "排练室里气氛剑拔弩张。贝斯手说你的歌词太自我，鼓手不满你改编了他的鼓点。乐队快要分裂了。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: band_chemistry
+        op: less_than
+        value: 25
+      - type: probability
+        chance: 0.55
+  choices:
+    - text: "坚持我的想法，是金子总会发光的"
+      result_text: "你没有退让。他们沉默了，但裂缝更深了。"
+      effects:
+        - stat: band_chemistry
+          op: subtract
+          value: 12
+        - stat: artistic_integrity
+          op: add
+          value: 5
+    - text: "听取大家的意见，一起修改"
+      result_text: "你们花了整晚争论，却写出了最好的一段副歌。"
+      effects:
+        - stat: band_chemistry
+          op: add
+          value: 15
+        - stat: artistic_integrity
+          op: subtract
+          value: 3
+    - text: "提议一起出去喝一杯，先冷静冷静"
+      result_text: "酒过三巡，大家把心里话都说了出来。矛盾没有解决，但空气松动了。"
+      effects:
+        - stat: band_chemistry
+          op: add
+          value: 8
+        - stat: money
+          op: subtract
+          value: 80
+        - stat: sanity
+          op: add
+          value: 5
+
+# ─── 万圣节演出 ──────────────────────────────────────────────
 - id: event_halloween_gig
-  description: "万圣节！一家酒吧邀请你们去做一场主题演出。"
+  oneTime: true
+  description: "万圣节！一家酒吧主动联系你们，想要一场重金属万圣节主题演出。舞台、灯光、烟雾机全部到位。"
   trigger:
     and:
       - type: date_check
         month: 10
-        day: 31
       - type: stat_check
         stat: fame
         op: greater_than
-        value: 30
+        value: 25
   choices:
-    - text: "欣然接受"
+    - text: "盛装打扮，大杀四方"
+      result_text: "那晚你们变成了怪物，观众疯了，网上出现了几个你们的短视频。"
+      effects:
+        - stat: fame
+          op: add
+          value: 22
+        - stat: money
+          op: add
+          value: 600
+        - stat: band_chemistry
+          op: add
+          value: 8
+    - text: "拒绝，这太商业化了"
+      result_text: "你写了一篇文章谴责音乐节日化。地下圈子里有几个人点了赞。"
+      effects:
+        - stat: artistic_integrity
+          op: add
+          value: 12
+        - stat: fame
+          op: subtract
+          value: 3
+
+# ─── 设备故障 ────────────────────────────────────────────────
+- id: event_equipment_breakdown
+  description: "排练到一半，你的主设备发出一声异响，然后彻底死了。维修报价让你心跳停了半拍。"
+  trigger:
+    and:
+      - type: probability
+        chance: 0.18
+  choices:
+    - text: "立刻花钱修好，音乐不能停"
+      result_text: "钱包瘦了，但至少你还能弹琴。"
+      effects:
+        - stat: money
+          op: subtract
+          value: 350
+        - stat: band_chemistry
+          op: add
+          value: 5
+    - text: "先借队友的设备凑合用"
+      result_text: "用着别人的东西感觉哪哪都不对，状态很差。"
+      effects:
+        - stat: technique
+          op: subtract
+          value: 5
+        - stat: sanity
+          op: subtract
+          value: 5
+
+# ─── 粉丝来信 ────────────────────────────────────────────────
+- id: event_fan_letter
+  oneTime: true
+  description: "你收到了一封陌生人写来的信。他说你们的歌帮他度过了最黑暗的时光——离婚、失业、孤独——那首歌是他唯一的出口。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 28
+      - type: probability
+        chance: 0.4
+  choices:
+    - text: "认真给他回了一封信"
+      result_text: "你花了两个小时写那封回信。也许这才是音乐真正的意义。"
+      effects:
+        - stat: sanity
+          op: add
+          value: 15
+        - stat: artistic_integrity
+          op: add
+          value: 8
+    - text: "把这封信发到社交媒体上"
+      result_text: "帖子获得了不少转发，但那位粉丝没有再联系你了。"
+      effects:
+        - stat: fame
+          op: add
+          value: 12
+        - stat: artistic_integrity
+          op: subtract
+          value: 5
+
+# ─── 健康危机 ────────────────────────────────────────────────
+- id: event_health_crisis
+  description: "你在排练时突然晕倒了。醒来后医生告诉你，你已经三个月没有好好睡觉，身体发出了警告信号。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: health
+        op: less_than
+        value: 15
+      - type: probability
+        chance: 0.7
+  choices:
+    - text: "强制休息两周"
+      result_text: "你告诉队友你需要消失一段时间。他们理解，但也担心。"
+      effects:
+        - stat: health
+          op: add
+          value: 25
+        - stat: sanity
+          op: add
+          value: 10
+        - stat: fame
+          op: subtract
+          value: 5
+        - stat: band_chemistry
+          op: subtract
+          value: 8
+    - text: "无视医生建议，继续演出"
+      result_text: "演出结束后你直接倒在了后台。"
+      effects:
+        - stat: health
+          op: subtract
+          value: 15
+        - stat: fame
+          op: add
+          value: 5
+        - stat: sanity
+          op: subtract
+          value: 10
+
+# ─── 精神崩溃 ────────────────────────────────────────────────
+- id: event_mental_breakdown
+  description: "凌晨三点，你坐在地板上哭了很久，你自己都不知道为什么。一切都感觉毫无意义——音乐、梦想、还有未来。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: sanity
+        op: less_than
+        value: 12
+      - type: probability
+        chance: 0.75
+  choices:
+    - text: "联系心理咨询师"
+      result_text: "第一次咨询很贵，但咨询师说的某句话让你记了很久。"
+      effects:
+        - stat: sanity
+          op: add
+          value: 20
+        - stat: money
+          op: subtract
+          value: 400
+        - stat: artistic_integrity
+          op: add
+          value: 5
+    - text: "打电话给最好的朋友"
+      result_text: "你们聊到天亮。不需要解决什么，有人听就够了。"
+      effects:
+        - stat: sanity
+          op: add
+          value: 15
+        - stat: band_chemistry
+          op: add
+          value: 8
+    - text: "写下来，把所有情绪写成歌词"
+      result_text: "那首歌你写了整整一夜，它可能是你写过最真实的东西。"
+      effects:
+        - stat: sanity
+          op: add
+          value: 8
+        - stat: artistic_integrity
+          op: add
+          value: 12
+
+# ─── 唱片公司兴趣 ────────────────────────────────────────────
+- id: event_label_interest
+  oneTime: true
+  description: "一个主流厂牌的A&R打来了电话。他们看了你们最近的演出视频，想约你们谈谈签约的可能性。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 55
+      - type: not_flag
+        flag: signed_major_label
+  choices:
+    - text: "接受见面，听听他们怎么说"
+      result_text: "会议室里有免费咖啡和厚厚的合同草稿。他们要求你们改变风格。"
       effects:
         - stat: fame
           op: add
           value: 20
         - stat: money
           op: add
-          value: 500
-    - text: "拒绝，这太商业了"
+          value: 10000
+        - stat: artistic_integrity
+          op: subtract
+          value: 15
+      flags_add:
+        - signed_major_label
+      flags_remove:
+        - stayed_indie
+    - text: "谢绝，坚守独立路线"
+      result_text: "你挂掉电话，心跳得很快，但你感到一种奇怪的自由。"
       effects:
         - stat: artistic_integrity
           op: add
-          value: 10
+          value: 18
+        - stat: fame
+          op: subtract
+          value: 5
+      flags_add:
+        - stayed_indie
 
-- id: event_creative_dispute
-  description: "你和队友在创作上产生了严重分歧..."
+# ─── 音乐节邀请 ──────────────────────────────────────────────
+- id: event_music_festival
+  oneTime: true
+  description: "一个中型音乐节的组委会联系了你们，邀请你们在夏天的户外舞台上表演。那是你们站过的最大的舞台。"
   trigger:
     and:
       - type: stat_check
-        stat: band_chemistry # This stat needs to be added to stats.yaml
-        op: less_than
-        value: 20
+        stat: fame
+        op: greater_than
+        value: 40
+      - type: stat_check
+        stat: technique
+        op: greater_than
+        value: 45
+      - type: date_check
+        month: 7
+      - type: probability
+        chance: 0.5
   choices:
-    - text: "坚持我的想法才是对的！"
+    - text: "接受！玩命准备"
+      result_text: "演出那天下着小雨，观众打着伞，你们打出了有生以来最好的一场。"
+      effects:
+        - stat: fame
+          op: add
+          value: 30
+        - stat: technique
+          op: add
+          value: 5
+        - stat: band_chemistry
+          op: add
+          value: 15
+        - stat: money
+          op: add
+          value: 2000
+    - text: "感到没准备好，婉拒"
+      result_text: "你们目送那个机会离开。但也许明年你们会更强。"
+      effects:
+        - stat: technique
+          op: add
+          value: 8
+        - stat: sanity
+          op: add
+          value: 5
+
+# ─── 病毒式传播 ──────────────────────────────────────────────
+- id: event_viral_moment
+  oneTime: true
+  description: "不知道什么时候，有人把你们上周演出的视频发到了网上——那个你们自己都觉得很随意的片段，现在有三十万次播放。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 30
+      - type: has_flag
+        flag: played_first_gig
+      - type: probability
+        chance: 0.22
+  choices:
+    - text: "乘势推出新歌，趁热打铁"
+      result_text: "你们三天没睡，录了一首新歌。它没有那个片段火，但粉丝记住了你们。"
+      effects:
+        - stat: fame
+          op: add
+          value: 25
+        - stat: health
+          op: subtract
+          value: 10
+        - stat: sanity
+          op: subtract
+          value: 8
+    - text: "保持神秘，什么都不做"
+      result_text: "热度消退得很快，但你们的名字留在了一些人的记忆里。"
+      effects:
+        - stat: fame
+          op: add
+          value: 12
+        - stat: artistic_integrity
+          op: add
+          value: 5
+
+# ─── 商业广告邀约 ────────────────────────────────────────────
+- id: event_cheesy_commercial
+  oneTime: true
+  description: "一家汽水品牌想用你们的歌做广告，报价非常可观。但他们想要你们在广告里说台词、跳舞。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 45
+      - type: not_flag
+        flag: signed_major_label
+      - type: probability
+        chance: 0.3
+  choices:
+    - text: "接了。钱是真实的，梦想是虚的"
+      result_text: "广告播出后，地下圈的朋友们不再联系你们了。但你们租了更好的排练室。"
+      effects:
+        - stat: money
+          op: add
+          value: 15000
+        - stat: artistic_integrity
+          op: subtract
+          value: 20
+        - stat: fame
+          op: add
+          value: 10
+    - text: "拒绝。哪怕很穷，也不卖这个"
+      result_text: "你们还是那么穷，但地下圈的口碑更好了一点。"
+      effects:
+        - stat: artistic_integrity
+          op: add
+          value: 15
+        - stat: fame
+          op: add
+          value: 5
+
+# ─── 乐队成员离队 ────────────────────────────────────────────
+- id: event_member_leaves
+  oneTime: true
+  description: "乐队里的一个核心成员找到你，说他决定离开——他要去上班，养家，过「正常人的生活」。他的眼神里有疲惫，也有歉意。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: band_chemistry
+        op: less_than
+        value: 15
+      - type: has_flag
+        flag: played_first_gig
+      - type: probability
+        chance: 0.5
+  choices:
+    - text: "尊重他的选择，送别他"
+      result_text: "你们喝了最后一次酒。他离开后，排练室安静得让人难受。"
       effects:
         - stat: band_chemistry
           op: subtract
+          value: 20
+        - stat: sanity
+          op: subtract
           value: 10
-    - text: "也许我该听听别人的意见"
+        - stat: artistic_integrity
+          op: add
+          value: 5
+    - text: "恳求他留下，并做出改变"
+      result_text: "他被你打动了，留了下来。但你知道你们都需要做出真正的改变。"
       effects:
         - stat: band_chemistry
           op: add
+          value: 15
+        - stat: sanity
+          op: subtract
+          value: 5
+
+# ─── 排练突破 ────────────────────────────────────────────────
+- id: event_rehearsal_breakthrough
+  description: "那个困扰你们三个月的过渡段，今晚排练时突然就顺了——就像拼图的最后一片落进去。所有人都愣了半秒，然后同时笑了。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: band_chemistry
+        op: greater_than
+        value: 65
+      - type: stat_check
+        stat: technique
+        op: greater_than
+        value: 50
+      - type: probability
+        chance: 0.3
+  choices:
+    - text: "今晚不停，把整首歌打磨到最好"
+      result_text: "排练室的灯亮了一整夜。明天大家都会很累，但这首歌完成了。"
+      effects:
+        - stat: technique
+          op: add
+          value: 8
+        - stat: artistic_integrity
+          op: add
+          value: 5
+        - stat: band_chemistry
+          op: add
           value: 10
+        - stat: health
+          op: subtract
+          value: 5
+    - text: "把这个时刻记下来，明天继续"
+      result_text: "你拿起手机录了一段。明天再继续的时候，这段灵感还在。"
+      effects:
+        - stat: technique
+          op: add
+          value: 5
+        - stat: band_chemistry
+          op: add
+          value: 8
+        - stat: health
+          op: add
+          value: 3
+
+# ─── 音乐评论 ────────────────────────────────────────────────
+- id: event_music_critic_review
+  oneTime: true
+  description: "一个有影响力的乐评人看了你们的演出，并在他的专栏里写了一篇长文。他的评价……褒贬参半。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 32
+      - type: has_flag
+        flag: played_first_gig
+      - type: probability
+        chance: 0.38
+  choices:
+    - text: "认真阅读批评，从中学习"
+      result_text: "他说你们的音乐「有真诚但缺技巧」。你把这句话贴在排练室的墙上。"
+      effects:
+        - stat: technique
+          op: add
+          value: 6
+        - stat: artistic_integrity
+          op: add
+          value: 4
+        - stat: fame
+          op: add
+          value: 8
+    - text: "在社交媒体上反驳他"
+      result_text: "这场口水战反而给你们带来了曝光度，但你在业内得罪了一些人。"
+      effects:
+        - stat: fame
+          op: add
+          value: 15
+        - stat: charm
+          op: subtract
+          value: 5
+        - stat: artistic_integrity
+          op: subtract
+          value: 3

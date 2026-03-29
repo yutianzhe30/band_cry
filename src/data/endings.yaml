@@ -1,6 +1,121 @@
+# ============================================================
+# 游戏结局库 (endings.yaml)
+# ============================================================
+
+# ─── 早期结局 ────────────────────────────────────────────────
+
+- id: ending_gave_up
+  title: "放弃了"
+  description: "你在18岁时带着满腔热血踏上了这条路，但现实一次次地打击你。两年后，你悄悄退出了乐队群，把吉他放进了壁橱。也许有一天你会后悔，也许不会。"
+  epilogue: "你后来在一家公司做了财务，偶尔在朋友圈看到以前乐手朋友的演出消息，会停留几秒。"
+  trigger:
+    and:
+      - type: age_check
+        is: 20
+      - type: stat_check
+        stat: fame
+        op: less_than
+        value: 8
+      - type: stat_check
+        stat: money
+        op: less_than
+        value: 150
+
+# ─── 中期结局 ────────────────────────────────────────────────
+
+- id: ending_burnout
+  title: "燃尽"
+  description: "你把所有的一切都燃烧殆尽——健康、精神、关系——最后什么也没有剩下。医院的病房很安静，你盯着天花板，想不起上一次睡够八小时是什么时候。"
+  epilogue: "医生说你需要至少一年的休养。乐队在你住院期间解散了。"
+  trigger:
+    and:
+      - type: stat_check
+        stat: health
+        op: less_than
+        value: 5
+      - type: stat_check
+        stat: sanity
+        op: less_than
+        value: 5
+
+- id: ending_local_hero
+  title: "本地英雄"
+  description: "你没有成为全国知名的乐队，但在这座城市里，所有真正热爱音乐的人都知道你们的名字。每次在小场地演出，你都能看到那些熟悉的面孔——他们为你们而来。"
+  epilogue: "25岁，你开了一家小型排练室，一边教学生，一边继续表演。不富裕，但很踏实。"
+  trigger:
+    and:
+      - type: age_check
+        is: 25
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 45
+      - type: stat_check
+        stat: fame
+        op: less_than
+        value: 75
+      - type: stat_check
+        stat: band_chemistry
+        op: greater_than
+        value: 65
+      - type: not_flag
+        flag: signed_major_label
+
+- id: ending_sell_out
+  title: "出卖灵魂"
+  description: "你的歌出现在了各大购物中心的背景音乐里，你的脸出现在了时尚杂志的封面上。你有了钱，有了名气，但镜子里的人让你越来越陌生。你记不起上次为了喜欢而演奏是什么时候了。"
+  epilogue: "你的第三张专辑销量很好，评论很差。你开始酗酒。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: signed_major_label
+      - type: stat_check
+        stat: artistic_integrity
+        op: less_than
+        value: 12
+      - type: stat_check
+        stat: money
+        op: greater_than
+        value: 80000
+
+# ─── 后期结局 ────────────────────────────────────────────────
+
+- id: ending_indie_legend
+  title: "独立传奇"
+  description: "你从未向任何人妥协过。30岁那年，你发现自己成了无数年轻乐手的偶像——不是因为销量，而是因为你告诉他们：可以按自己的方式活着。"
+  epilogue: "你的唱片没有进过排行榜，但在地下音乐圈里，你的名字几乎是一种信仰。"
+  trigger:
+    and:
+      - type: age_check
+        is: 30
+      - type: has_flag
+        flag: stayed_indie
+      - type: stat_check
+        stat: artistic_integrity
+        op: greater_than
+        value: 85
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 50
+
+- id: ending_washed_up
+  title: "过气乐手"
+  description: "35岁，你还在。但那种在台上感受到的电流感，已经消失很久了。你在家乡的酒吧里翻唱着别人的老歌，偶尔有人说「你以前好像挺厉害的」。"
+  epilogue: "你微笑着说「还好」，转身点了一杯酒。"
+  trigger:
+    and:
+      - type: age_check
+        is: 35
+      - type: stat_check
+        stat: fame
+        op: less_than
+        value: 20
+
 - id: ending_27_club
   title: "27岁俱乐部"
-  description: "你的才华燃烧得太过耀眼。你留下了传奇，也付出了生命的代价，永远停留在了27岁。"
+  description: "你的才华燃烧得太过耀眼，耀眼到把你自己也点燃了。他们说天才总是活得短暂——你不知道这是安慰还是诅咒。你的最后一张专辑在你死后卖了一百万张。"
+  epilogue: "巡演期间，你永远停留在了27岁。你的遗物里有一本写了一半的歌词本。"
   trigger:
     and:
       - type: age_check
@@ -16,50 +131,29 @@
       - type: stat_check
         stat: technique
         op: greater_than
-        value: 90
+        value: 88
       - type: stat_check
         stat: fame
         op: greater_than
-        value: 80
+        value: 78
 
-- id: ending_washed_up
-  title: "过气乐手"
-  description: "你的光芒逐渐黯淡，最终只能在小镇的酒吧里翻唱着老歌，怀念过去。你今年35岁。"
+- id: ending_rock_legend
+  title: "摇滚传奇"
+  description: "35岁那年，你站在一个体育场的舞台上，望着台下十万张抬起的脸。你想起了第一次演出时那个只有十几人的地下室。从那里到这里，每一步都是真实的。"
+  epilogue: "你的乐队被写进了音乐教科书。年轻人用你的歌名纹了纹身。你还在继续演出。"
   trigger:
     and:
       - type: age_check
         is: 35
       - type: stat_check
         stat: fame
-        op: less_than
-        value: 20
-
-- id: ending_sell_out
-  title: "签约主流，但出卖灵魂"
-  description: "你向商业低头，换来了数不尽的财富，但也失去了创作的初心和快乐。"
-  trigger:
-    and:
-      - type: has_flag
-        flag: signed_major_label
-      - type: stat_check
-        stat: artistic_integrity
-        op: less_than
-        value: 10
-      - type: stat_check
-        stat: money
         op: greater_than
-        value: 1000000
-
-- id: ending_indie_legend
-  title: "独立传奇"
-  description: "你从未向主流妥协，成为了独立音乐界备受尊敬的传奇。虽然不富裕，但你拥有真正的自由。"
-  trigger:
-    and:
-      - type: age_check
-        is: 30
-      - type: has_flag
-        flag: stayed_indie
+        value: 88
       - type: stat_check
-        stat: artistic_integrity
+        stat: technique
         op: greater_than
-        value: 90
+        value: 82
+      - type: stat_check
+        stat: health
+        op: greater_than
+        value: 30

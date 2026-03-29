@@ -1,76 +1,118 @@
+# ============================================================
+# 每周行动库 (actions.yaml)
+# ============================================================
+
 - id: practice
   name: 精进琴技
-  description: "日复一日的练习是通往大师的唯一道路。"
-  cost: # AP cost
+  description: "日复一日的练习，是通往大师的唯一道路。"
+  cost:
     ap: 1
   effects:
     - stat: technique
       op: add
-      value: 2 # Base value
+      value: 3
     - stat: sanity
       op: subtract
-      value: 1
+      value: 2
 
 - id: compose
   name: 创作新歌
-  description: "将脑海中的旋律变为现实。"
+  description: "将脑海中混沌的旋律变为现实。"
   cost:
     ap: 1
   effects:
-    # This would likely trigger a different mechanic, maybe add to a 'song_progress' stat
     - stat: artistic_integrity
+      op: add
+      value: 3
+    - stat: sanity
+      op: subtract
+      value: 3
+    - stat: charm
       op: add
       value: 1
 
 - id: gig
   name: 寻找演出
-  description: "是时候登上舞台了。"
+  description: "只有站上舞台，才能让更多人听到你的声音。"
   cost:
     ap: 1
   effects:
-    # This is a good candidate for triggering a specific event chain
     - stat: fame
       op: add
-      value: 1
+      value: 3
+    - stat: charm
+      op: add
+      value: 2
+    - stat: money
+      op: add
+      value: 100
+    - stat: health
+      op: subtract
+      value: 2
 
-- id: socialize
-  name: 社交鬼混
-  description: "和朋友们出去玩，或者在圈子里混个脸熟。"
+- id: rehearse
+  name: 乐队合练
+  description: "默契不是天生的，是一次次排练磨出来的。"
   cost:
     ap: 1
   effects:
     - stat: band_chemistry
       op: add
-      value: 2
+      value: 5
+    - stat: technique
+      op: add
+      value: 1
     - stat: sanity
-      op: add
-      value: 3
-    - stat: money
-      op: subtract
-      value: 50
-
-- id: work
-  name: 打工赚钱
-  description: "音乐不能当饭吃...至少现在还不能。"
-  cost:
-    ap: 1
-  effects:
-    - stat: money
-      op: add
-      value: 200
-    - stat: health
       op: subtract
       value: 1
 
-- id: rest
-  name: 休息放松
-  description: "在崩溃之前好好睡一觉。"
+- id: socialize
+  name: 社交鬼混
+  description: "在圈子里混个脸熟，或者只是和朋友喝杯酒放松一下。"
   cost:
     ap: 1
   effects:
-    - stat: health
+    - stat: charm
+      op: add
+      value: 3
+    - stat: band_chemistry
       op: add
       value: 3
     - stat: sanity
       op: add
       value: 5
+    - stat: money
+      op: subtract
+      value: 60
+
+- id: work
+  name: 打工赚钱
+  description: "音乐不能当饭吃……至少现在还不能。"
+  cost:
+    ap: 1
+  effects:
+    - stat: money
+      op: add
+      value: 250
+    - stat: health
+      op: subtract
+      value: 2
+    - stat: sanity
+      op: subtract
+      value: 1
+    - stat: artistic_integrity
+      op: subtract
+      value: 1
+
+- id: rest
+  name: 休息放松
+  description: "在彻底崩溃之前好好睡一觉。"
+  cost:
+    ap: 1
+  effects:
+    - stat: health
+      op: add
+      value: 8
+    - stat: sanity
+      op: add
+      value: 8

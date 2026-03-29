@@ -1,14 +1,14 @@
 // src/engine/GameLoop.ts
 
-import { GameState, PlayerCharacter, GameAction, Effect, GameEvent, GameEnding } from '../types/GameTypes';
+import { GameState, PlayerCharacter, GameAction, Effect, GameEvent, GameEnding, EventChoice, LogEntry } from '../types/GameTypes';
 import { StatSystem } from './StatSystem';
 import { ActionSystem } from './ActionSystem';
 import { EventManager } from './EventManager';
 import { EndingManager } from './EndingManager';
 
-const WEEKS_PER_YEAR = 52;
 const START_AGE = 18;
 const ACTION_POINTS_PER_WEEK = 4;
+const WEEKLY_LIVING_COST = 80;
 
 export class GameLoop {
   public gameState: GameState;
@@ -16,17 +16,24 @@ export class GameLoop {
   private actionSystem: ActionSystem;
   private eventManager: EventManager;
   private endingManager: EndingManager;
+  private birthYear: number;
 
   constructor(playerInfo: { name: string; gender: 'Male' | 'Female'; role: PlayerCharacter['role'] }) {
     this.statSystem = StatSystem.getInstance();
     this.actionSystem = ActionSystem.getInstance();
     this.eventManager = EventManager.getInstance();
     this.endingManager = EndingManager.getInstance();
-    
-    this.gameState = this.initializeGameState(playerInfo);
+
+    const startYear = new Date().getFullYear();
+    this.birthYear = startYear - START_AGE;
+
+    this.gameState = this.initializeGameState(playerInfo, startYear);
   }
 
-  private initializeGameState(playerInfo: { name: string; gender: 'Male' | 'Female'; role: PlayerCharacter['role'] }): GameState {
+  private initializeGameState(
+    playerInfo: { name: string; gender: 'Male' | 'Female'; role: PlayerCharacter['role'] },
+    startYear: number
+  ): GameState {
     const player: PlayerCharacter = {
       name: playerInfo.name,
       gender: playerInfo.gender,
@@ -37,82 +44,120 @@ export class GameLoop {
 
     return {
       player,
-      currentDate: new Date(new Date().getFullYear() + START_AGE, 0, 1), // Start at age 18
+      currentDate: new Date(startYear, 6, 1), // July 1st of start year
       actionPoints: ACTION_POINTS_PER_WEEK,
+      week: 1,
+      firedEventIds: new Set<string>(),
+      log: [],
     };
+  }
+
+  public getAge(): number {
+    return this.gameState.currentDate.getFullYear() - this.birthYear;
   }
 
   public getAvailableActions(): GameAction[] {
     return this.actionSystem.actions;
   }
-  
-  public getAge(): number {
-    const birthYear = this.gameState.currentDate.getFullYear() - START_AGE;
-    return this.gameState.currentDate.getFullYear() - birthYear;
-  }
 
-  public performAction(actionId: string): { event: GameEvent | null, ending: GameEnding | null } {
+  /** Perform an action and return a log message. Returns false if action invalid. */
+  public performAction(actionId: string): string | null {
     const action = this.actionSystem.getAction(actionId);
     if (!action || this.gameState.actionPoints < action.cost.ap) {
-      console.warn(`Action ${actionId} not found or not enough AP.`);
-      return { event: null, ending: null };
+      return null;
     }
 
     this.gameState.actionPoints -= action.cost.ap;
     this.applyEffects(action.effects);
 
-    // If AP is now 0, automatically end the turn
-    if (this.gameState.actionPoints === 0) {
-      return this.endTurn();
-    }
-    
-    // Return current state if turn is not over
-    return { event: null, ending: null };
+    const logText = `执行了「${action.name}」`;
+    this.addLog(logText);
+    return logText;
   }
 
-  public endTurn(): { event: GameEvent | null, ending: GameEnding | null } {
-    // 1. Apply weekly recurring effects (e.g., rent)
-    // TODO: this.applyWeeklyCosts();
+  /** End the current week. Returns triggered event, ending, or summary. */
+  public endTurn(): { event: GameEvent | null; ending: GameEnding | null; summary: string[] } {
+    const summary: string[] = [];
 
-    // 2. Advance time
-    this.gameState.currentDate.setDate(this.gameState.currentDate.getDate() + 7);
+    // 1. Weekly living cost
+    const money = this.gameState.player.stats.get('money') ?? 0;
+    const cost = Math.min(money, WEEKLY_LIVING_COST);
+    this.gameState.player.stats.set('money', Math.max(0, money - WEEKLY_LIVING_COST));
+    if (cost > 0) summary.push(`支付了 ¥${cost} 生活费`);
+    if (money < WEEKLY_LIVING_COST) summary.push(`⚠ 钱不够了，生活捉襟见肘`);
 
-    // 3. Replenish Action Points
+    // 2. Passive stat decay
+    this.nudgeStat('health', -1);
+    this.nudgeStat('sanity', -1);
+
+    const health = this.gameState.player.stats.get('health') ?? 0;
+    const sanity = this.gameState.player.stats.get('sanity') ?? 0;
+    if (health < 20) summary.push(`⚠ 身体状态很差，注意休息`);
+    if (sanity < 20) summary.push(`⚠ 精神状态濒临崩溃`);
+
+    // 3. Advance time by one week
+    const next = new Date(this.gameState.currentDate.getTime());
+    next.setDate(next.getDate() + 7);
+    this.gameState.currentDate = next;
+    this.gameState.week++;
+
+    // 4. Replenish action points
     this.gameState.actionPoints = ACTION_POINTS_PER_WEEK;
 
-    // 4. Check for events
-    const triggeredEvent = this.eventManager.checkForTriggeredEvents(this.gameState);
+    // 5. Check for triggered events
+    const triggeredEvent = this.eventManager.checkForTriggeredEvents(this.gameState, this.getAge());
     if (triggeredEvent) {
-      // The UI will handle showing the event. Game is paused until choice is made.
-      return { event: triggeredEvent, ending: null };
+      if (triggeredEvent.oneTime) {
+        this.gameState.firedEventIds.add(triggeredEvent.id);
+      }
+      return { event: triggeredEvent, ending: null, summary };
     }
 
-    // 5. Check for endings
-    const triggeredEnding = this.endingManager.checkEndings(this.gameState);
+    // 6. Check for endings
+    const triggeredEnding = this.endingManager.checkEndings(this.gameState, this.getAge());
     if (triggeredEnding) {
-      // Game over
-      return { event: null, ending: triggeredEnding };
+      this.addLog(`【结局】${triggeredEnding.title}`);
+      return { event: null, ending: triggeredEnding, summary };
     }
-    
-    return { event: null, ending: null };
+
+    return { event: null, ending: null, summary };
   }
 
-  public applyEffects(effects: Effect[]) {
+  /** Apply an event choice's effects and flags. */
+  public applyEventChoice(choice: EventChoice): void {
+    this.applyEffects(choice.effects);
+    if (choice.flags_add) choice.flags_add.forEach(f => this.gameState.player.flags.add(f));
+    if (choice.flags_remove) choice.flags_remove.forEach(f => this.gameState.player.flags.delete(f));
+    this.addLog(`选择了：${choice.text}`);
+    if (choice.result_text) this.addLog(choice.result_text);
+  }
+
+  public applyEffects(effects: Effect[]): void {
     effects.forEach(effect => {
-      const currentVal = this.gameState.player.stats.get(effect.stat) || 0;
-      let newVal = currentVal;
+      const current = this.gameState.player.stats.get(effect.stat) ?? 0;
+      let next = current;
       switch (effect.op) {
-        case 'add':
-          newVal += effect.value;
-          break;
-        case 'subtract':
-          newVal -= effect.value;
-          break;
-        case 'set':
-          newVal = effect.value;
-          break;
+        case 'add':      next = current + effect.value; break;
+        case 'subtract': next = current - effect.value; break;
+        case 'set':      next = effect.value;           break;
       }
-      this.gameState.player.stats.set(effect.stat, newVal);
+      if (effect.stat === 'money') {
+        next = Math.max(0, next);
+      } else {
+        next = Math.max(0, Math.min(100, next));
+      }
+      this.gameState.player.stats.set(effect.stat, next);
     });
+  }
+
+  private nudgeStat(statId: string, delta: number): void {
+    const val = this.gameState.player.stats.get(statId) ?? 0;
+    const next = Math.max(0, Math.min(100, val + delta));
+    this.gameState.player.stats.set(statId, next);
+  }
+
+  private addLog(text: string): void {
+    this.gameState.log.push({ week: this.gameState.week, text });
+    if (this.gameState.log.length > 60) this.gameState.log.shift();
   }
 }

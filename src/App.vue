@@ -16,7 +16,7 @@
       @back="goBackToStart"
       :background-image="probeRoomImage"
     />
-    <MainGame v-else-if="currentPage === 'game'" :character="playerCharacter" />
+    <MainGame v-else-if="currentPage === 'game'" :character="playerCharacter" @restart="goBackToStart" />
     <DebugPage v-else-if="currentPage === 'debug'" />
   </div>
 </template>

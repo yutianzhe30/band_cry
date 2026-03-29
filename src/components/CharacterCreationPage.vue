@@ -11,6 +11,18 @@
     <div class="form-container">
       <h1 class="title">{{ t('characterCreationPage.title') }}</h1>
 
+      <!-- Name Input -->
+      <div class="selection-group">
+        <h2 class="subtitle">你的名字</h2>
+        <input
+          v-model="playerName"
+          type="text"
+          class="name-input"
+          placeholder="给自己起个名字..."
+          maxlength="12"
+        />
+      </div>
+
       <!-- Gender Selection -->
       <div class="selection-group">
         <h2 class="subtitle">{{ t('characterCreationPage.gender') }}</h2>
@@ -61,6 +73,7 @@ const instruments = ref(['Guitar', 'Bass', 'Keyboard', 'Vocal', 'Drum']);
 
 const selectedGender = ref(null);
 const selectedInstrument = ref(null);
+const playerName = ref('');
 
 const isSelectionComplete = computed(() => selectedGender.value && selectedInstrument.value);
 
@@ -99,6 +112,7 @@ const currentCharacter = computed(() => {
 function confirmCharacter() {
   if (isSelectionComplete.value) {
     emit('character-created', {
+      name: playerName.value.trim() || '无名乐手',
       gender: selectedGender.value,
       instrument: selectedInstrument.value,
     });
@@ -238,6 +252,27 @@ function goBack() {
 
 .option-label input[type="radio"] {
   display: none;
+}
+
+.name-input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.4rem;
+  color: #eee;
+  font-size: 1rem;
+  padding: 0.55rem 1rem;
+  width: 100%;
+  max-width: 260px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.name-input:focus {
+  border-color: #4CAF50;
+}
+
+.name-input::placeholder {
+  color: #555;
 }
 
 .actions {

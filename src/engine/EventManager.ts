@@ -1,21 +1,19 @@
 // src/engine/EventManager.ts
 
 import yaml from 'js-yaml';
-import { GameEvent, GameState, Trigger } from '../types/GameTypes';
+import { GameEvent, GameState } from '../types/GameTypes';
+import { evaluateTrigger } from './TriggerEvaluator';
 import eventsYaml from '../data/events.yaml?raw';
 
-/**
- * Manages loading, triggering, and resolving game events.
- */
 export class EventManager {
   private static instance: EventManager;
   public allEvents: GameEvent[];
 
   private constructor() {
     try {
-      this.allEvents = yaml.load(eventsYaml) as GameEvent[];
+      this.allEvents = (yaml.load(eventsYaml) as GameEvent[]) ?? [];
     } catch (e) {
-      console.error("Failed to load or parse events.yaml:", e);
+      console.error('Failed to load events.yaml:', e);
       this.allEvents = [];
     }
   }
@@ -28,23 +26,18 @@ export class EventManager {
   }
 
   /**
-   * Checks all events to see if any should be triggered based on the current game state.
-   * @param gameState The current state of the game.
-   * @returns A GameEvent to be presented to the player, or null if no event triggers.
+   * Shuffle through all events and return the first one whose trigger evaluates to true.
+   * One-time events that have already fired are skipped.
    */
-  public checkForTriggeredEvents(gameState: GameState): GameEvent | null {
-    // TODO: Implement the full trigger evaluation logic.
-    // This is a placeholder that just returns the first event for now.
-    if (this.allEvents.length > 0) {
-      // In the future, this will loop through allEvents and evaluate their triggers.
-      // For now, let's not trigger anything automatically to avoid breaking the loop.
-      console.log("Event check placeholder: No events triggered.");
+  public checkForTriggeredEvents(gameState: GameState, age: number): GameEvent | null {
+    const shuffled = [...this.allEvents].sort(() => Math.random() - 0.5);
+
+    for (const event of shuffled) {
+      if (event.oneTime && gameState.firedEventIds.has(event.id)) continue;
+      if (evaluateTrigger(event.trigger, gameState, age)) {
+        return event;
+      }
     }
     return null;
-  }
-
-  private evaluateTrigger(trigger: Trigger, gameState: GameState): boolean {
-    // TODO: Implement the logic for 'and', 'or', 'stat_check', etc.
-    return false;
   }
 }
