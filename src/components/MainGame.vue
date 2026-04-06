@@ -1,5 +1,27 @@
 <template>
   <div class="game-root" :class="`scene--${currentScene}`">
+    <!-- Save dialog -->
+    <SaveSlotDialog
+      v-if="showSaveDialog"
+      :metas="saveMetas"
+      mode="save"
+      @save-to="onSaveTo"
+      @load-from="onLoadFrom"
+      @delete="onDeleteSlot"
+      @close="showSaveDialog = false"
+    />
+
+    <!-- Summary overlay (above everything) -->
+    <transition name="fade">
+      <div v-if="state.phase === 'summary'" class="summary-overlay">
+        <div class="summary-box">
+          <p class="summary-title">── 本周结算 ──</p>
+          <p v-for="(line, i) in state.weekSummary" :key="i" class="summary-line">{{ line }}</p>
+          <button class="summary-continue" @click="dismissSummary">继续 →</button>
+        </div>
+      </div>
+    </transition>
+
     <!-- Background -->
     <div class="scene-bg" :style="bgStyle"></div>
     <div class="scene-overlay"></div>
@@ -13,42 +35,55 @@
       <span class="hdr-age">{{ state.age }} 岁</span>
       <span class="hdr-sep">·</span>
       <span class="hdr-date">{{ formattedDate }}</span>
+      <button class="hdr-save-btn" @click="openSaveDialog">保存</button>
     </header>
 
-    <!-- Main area -->
-    <div class="game-body">
-      <!-- Left: Stats -->
-      <aside class="sidebar">
-        <StatBar
-          :stats="state.stats"
-          :stat-defs="statDefs"
-          :player-name="state.playerName"
-          :player-role="state.playerRole"
-        />
-        <LogPanel :entries="state.log" />
-      </aside>
+    <!-- TabBar -->
+    <TabBar
+      :current-tab="currentTab"
+      :locked="state.phase !== 'action'"
+      @change="currentTab = $event"
+    />
 
-      <!-- Center: scene -->
-      <main class="scene-area">
-        <transition name="fade">
-          <div v-if="state.phase === 'summary'" class="summary-overlay">
-            <div class="summary-box">
-              <p class="summary-title">── 本周结算 ──</p>
-              <p v-for="(line, i) in state.weekSummary" :key="i" class="summary-line">{{ line }}</p>
-              <button class="summary-continue" @click="dismissSummary">继续 →</button>
-            </div>
-          </div>
-        </transition>
-      </main>
+    <!-- Main body: content switches by tab -->
+    <div class="game-body">
+
+      <!-- ACTION TAB -->
+      <template v-if="currentTab === 'action'">
+        <aside class="sidebar">
+          <StatBar
+            :stats="state.stats"
+            :stat-defs="statDefs"
+            :player-name="state.playerName"
+            :player-role="state.playerRole"
+          />
+        </aside>
+        <main class="scene-area">
+          <FlavorText :week="state.week" />
+        </main>
+      </template>
+
+      <!-- BAND TAB -->
+      <BandPage
+        v-else-if="currentTab === 'band'"
+        :band-members="state.bandMembers"
+      />
+
+      <!-- LOG TAB -->
+      <LogPage
+        v-else-if="currentTab === 'log'"
+        :entries="state.log"
+      />
+
     </div>
 
-    <!-- VN dialog / action panel at the bottom -->
+    <!-- Footer: ActionPanel / EventCard / Ending (always present) -->
     <footer class="dialog-zone">
       <transition name="slide-up" mode="out-in">
 
-        <!-- ACTION phase -->
+        <!-- ACTION phase on action tab -->
         <ActionPanel
-          v-if="state.phase === 'action'"
+          v-if="state.phase === 'action' && currentTab === 'action'"
           key="action"
           :actions="availableActions"
           :current-a-p="state.ap"
@@ -57,7 +92,7 @@
           @end-week="onEndWeek"
         />
 
-        <!-- EVENT phase -->
+        <!-- EVENT phase (shown regardless of active tab; tab is locked) -->
         <EventCard
           v-else-if="state.phase === 'event' && state.currentEvent"
           key="event"
@@ -81,24 +116,33 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, onMounted } from 'vue';
+import { reactive, computed, onMounted, ref } from 'vue';
 import { GameLoop } from '../engine/GameLoop';
+import type { SaveMeta } from '../engine/GameLoop';
 import { StatSystem } from '../engine/StatSystem';
-import type { GameEvent, GameEnding, EventChoice, LogEntry, GameState, GameAction } from '../types/GameTypes';
+import type { GameEvent, GameEnding, EventChoice, LogEntry, GameState, GameAction, BandMember } from '../types/GameTypes';
 import StatBar from './StatBar.vue';
 import EventCard from './EventCard.vue';
-import LogPanel from './LogPanel.vue';
 import ActionPanel from './ActionPanel.vue';
+import SaveSlotDialog from './SaveSlotDialog.vue';
+import TabBar from './TabBar.vue';
+import FlavorText from './FlavorText.vue';
+import LogPage from './LogPage.vue';
+import BandPage from './BandPage.vue';
 import probeRoomBg from '../assets/images/ProbeRoom1.png';
 
 const props = defineProps<{
   character: { name: string; gender: 'Male' | 'Female'; instrument: string };
+  loadFromSave?: boolean | string;
 }>();
 
 defineEmits<{ restart: [] }>();
 
 // ── Engine ────────────────────────────────────────────────
-const gameLoop = new GameLoop({
+const loadSlot = typeof props.loadFromSave === 'string' ? props.loadFromSave
+  : props.loadFromSave === true ? 'autosave' : null;
+
+let gameLoop = (loadSlot && GameLoop.fromSave(loadSlot)) || new GameLoop({
   name: props.character.name || '无名乐手',
   gender: props.character.gender,
   role: props.character.instrument as any,
@@ -116,6 +160,7 @@ interface UIState {
   ap: number;
   stats: Record<string, number>;
   log: LogEntry[];
+  bandMembers: BandMember[];
   phase: 'action' | 'event' | 'summary' | 'ending';
   currentEvent: GameEvent | null;
   currentEnding: GameEnding | null;
@@ -131,6 +176,7 @@ const state = reactive<UIState>({
   ap: 4,
   stats: {},
   log: [],
+  bandMembers: [],
   phase: 'action',
   currentEvent: null,
   currentEnding: null,
@@ -138,7 +184,9 @@ const state = reactive<UIState>({
   currentDate: new Date(),
 });
 
-// Provide raw gameState to EventCard for requirement checks
+// ── Tab state ─────────────────────────────────────────────
+const currentTab = ref<'action' | 'band' | 'log'>('action');
+
 const rawGameState = computed((): GameState => gameLoop.gameState);
 
 function syncState() {
@@ -151,6 +199,7 @@ function syncState() {
   state.week = gs.week;
   state.age = gameLoop.getAge();
   state.log = [...gs.log];
+  state.bandMembers = [...gs.bandMembers];
   state.currentDate = new Date(gs.currentDate);
 }
 
@@ -175,7 +224,6 @@ const bgStyle = computed(() => ({
 function onPerformAction(actionId: string) {
   gameLoop.performAction(actionId);
   syncState();
-  // If AP hits 0 automatically end the week
   if (gameLoop.gameState.actionPoints === 0) {
     onEndWeek();
   }
@@ -184,11 +232,11 @@ function onPerformAction(actionId: string) {
 function onEndWeek() {
   const result = gameLoop.endTurn();
   syncState();
+  gameLoop.saveState('autosave');
 
   if (result.summary.length > 0) {
     state.weekSummary = result.summary;
     state.phase = 'summary';
-    // Store event/ending to show after summary
     pendingEvent = result.event;
     pendingEnding = result.ending;
   } else if (result.event) {
@@ -202,6 +250,38 @@ function onEndWeek() {
 
 let pendingEvent: GameEvent | null = null;
 let pendingEnding: GameEnding | null = null;
+
+// ── Save dialog ───────────────────────────────────────────
+const showSaveDialog = ref(false);
+const saveMetas = ref<SaveMeta[]>([]);
+
+function openSaveDialog() {
+  saveMetas.value = GameLoop.getSaveMetas();
+  showSaveDialog.value = true;
+}
+
+function onSaveTo(slot: string) {
+  gameLoop.saveState(slot);
+  saveMetas.value = GameLoop.getSaveMetas();
+}
+
+function onLoadFrom(slot: string) {
+  const loaded = GameLoop.fromSave(slot);
+  if (loaded) {
+    gameLoop = loaded;
+    syncState();
+    state.phase = 'action';
+    state.currentEvent = null;
+    state.currentEnding = null;
+    state.weekSummary = [];
+    currentTab.value = 'action';
+  }
+}
+
+function onDeleteSlot(slot: string) {
+  GameLoop.deleteSave(slot);
+  saveMetas.value = GameLoop.getSaveMetas();
+}
 
 function dismissSummary() {
   state.weekSummary = [];
@@ -223,18 +303,15 @@ function onChooseEvent(choice: EventChoice) {
   syncState();
   state.currentEvent = null;
 
-  // Show the choice result as a brief summary if it has result_text
   if (choice.result_text) {
     state.weekSummary = [choice.result_text];
     state.phase = 'summary';
     pendingEvent = null;
     pendingEnding = null;
 
-    // After dismissing the result, check for ending
     const ending = gameLoop['endingManager'].checkEndings(gameLoop.gameState, gameLoop.getAge());
     if (ending) pendingEnding = ending;
   } else {
-    // Check for ending after choice
     const ending = gameLoop['endingManager'].checkEndings(gameLoop.gameState, gameLoop.getAge());
     if (ending) {
       state.currentEnding = ending;
@@ -299,6 +376,18 @@ onMounted(() => syncState());
 .hdr-age  { color: #ffd200; }
 .hdr-date { color: #777; }
 .hdr-sep  { color: #444; }
+.hdr-save-btn {
+  margin-left: auto;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 0.3rem;
+  color: #aaa;
+  font-size: 0.72rem;
+  padding: 0.18rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.hdr-save-btn:hover { background: rgba(255,255,255,0.13); color: #eee; }
 
 /* ── Body ── */
 .game-body {
@@ -323,27 +412,29 @@ onMounted(() => syncState());
   flex: 1;
   position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
 }
 
-/* ── Summary overlay ── */
+/* ── Summary overlay (above all content) ── */
 .summary-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(4, 4, 18, 0.7);
-  border-radius: 0.6rem;
+  background: rgba(4, 4, 18, 0.75);
+  z-index: 50;
+  backdrop-filter: blur(4px);
 }
 
 .summary-box {
-  background: rgba(10, 10, 35, 0.95);
+  background: rgba(10, 10, 35, 0.97);
   border: 1px solid rgba(180, 120, 255, 0.3);
   border-radius: 0.6rem;
   padding: 1.2rem 1.8rem;
   min-width: 260px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;

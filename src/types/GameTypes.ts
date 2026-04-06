@@ -19,6 +19,14 @@ export interface LogEntry {
   text: string;
 }
 
+export interface BandMember {
+  id: string;
+  name: string;
+  role: PlayerCharacter['role'];
+  chemistry: number; // 0-100, relationship value with player
+  mood: 'happy' | 'neutral' | 'unhappy';
+}
+
 export interface GameState {
   player: PlayerCharacter;
   currentDate: Date;
@@ -26,6 +34,7 @@ export interface GameState {
   week: number;
   firedEventIds: Set<string>;
   log: LogEntry[];
+  bandMembers: BandMember[];
 }
 
 export interface Effect {

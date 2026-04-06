@@ -1,6 +1,13 @@
 <template>
   <div class="debug-page">
-    <h1>Engine Debug Panel</h1>
+    <div class="debug-topbar">
+      <h1>Engine Debug Panel</h1>
+      <div class="topbar-actions">
+        <button @click="saveGame" class="save-button">Save State</button>
+        <button @click="loadGame" class="load-button" :disabled="!hasSave">Load State</button>
+        <button @click="$emit('back')" class="back-button">← Back to Main</button>
+      </div>
+    </div>
 
     <!-- Game State Display -->
     <div class="state-section">
@@ -67,6 +74,8 @@ import { StatSystem } from '../engine/StatSystem';
 import { ActionSystem } from '../engine/ActionSystem';
 import { EventManager } from '../engine/EventManager';
 
+defineEmits(['back']);
+
 let gameLoop;
 const statSystem = StatSystem.getInstance();
 const actionSystem = ActionSystem.getInstance();
@@ -77,9 +86,11 @@ const eventLog = ref('No events yet.');
 const availableActions = ref([]);
 const allEvents = ref([]);
 const selectedEventId = ref('');
+const hasSave = ref(GameLoop.hasSave());
 
 onMounted(() => {
-  gameLoop = new GameLoop({ name: 'Debug Player', gender: 'Male', role: 'Guitar' });
+  const saved = GameLoop.fromSave('autosave');
+  gameLoop = saved ?? new GameLoop({ name: 'Debug Player', gender: 'Male', role: 'Guitar' });
   updateGameStateRef();
   availableActions.value = gameLoop.getAvailableActions();
   allEvents.value = eventManager.allEvents;
@@ -120,6 +131,22 @@ function triggerSelectedEvent() {
     }
 }
 
+function saveGame() {
+  gameLoop.saveState('autosave');
+  hasSave.value = true;
+  eventLog.value = 'State saved to autosave.';
+}
+
+function loadGame() {
+  const loaded = GameLoop.fromSave('autosave');
+  if (loaded) {
+    gameLoop = loaded;
+    updateGameStateRef();
+    availableActions.value = gameLoop.getAvailableActions();
+    eventLog.value = 'State loaded from autosave.';
+  }
+}
+
 function logResult(event, ending) {
   if (ending) {
     eventLog.value = `--- GAME OVER ---
@@ -150,6 +177,23 @@ ${event.choices.map(c => `- ${c.text}`).join('\n')}`;
   flex-direction: column;
   gap: 1.5rem;
 }
+.debug-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.topbar-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.save-button { background-color: #2196F3; }
+.save-button:hover { background-color: #1976D2; }
+.load-button { background-color: #9C27B0; }
+.load-button:hover { background-color: #7B1FA2; }
+.back-button { background-color: #607D8B; }
+.back-button:hover { background-color: #455A64; }
 h1, h2 {
   color: #4CAF50;
   border-bottom: 1px solid #444;

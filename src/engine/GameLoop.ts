@@ -1,10 +1,21 @@
 // src/engine/GameLoop.ts
 
-import { GameState, PlayerCharacter, GameAction, Effect, GameEvent, GameEnding, EventChoice, LogEntry } from '../types/GameTypes';
+import { GameState, PlayerCharacter, GameAction, Effect, GameEvent, GameEnding, EventChoice, LogEntry, BandMember } from '../types/GameTypes';
 import { StatSystem } from './StatSystem';
 import { ActionSystem } from './ActionSystem';
 import { EventManager } from './EventManager';
 import { EndingManager } from './EndingManager';
+
+export interface SaveMeta {
+  slot: string;
+  playerName: string;
+  week: number;
+  age: number;
+  savedAt: string; // ISO timestamp
+}
+
+const SAVE_INDEX_KEY = 'band_cry_save_index';
+const SAVE_KEY = (slot: string) => `band_cry_save_${slot}`;
 
 const START_AGE = 18;
 const ACTION_POINTS_PER_WEEK = 4;
@@ -49,6 +60,7 @@ export class GameLoop {
       week: 1,
       firedEventIds: new Set<string>(),
       log: [],
+      bandMembers: [],
     };
   }
 
@@ -159,5 +171,90 @@ export class GameLoop {
   private addLog(text: string): void {
     this.gameState.log.push({ week: this.gameState.week, text });
     if (this.gameState.log.length > 60) this.gameState.log.shift();
+  }
+
+  // ── Save / Load ──────────────────────────────────────────
+
+  public saveState(slot = 'autosave'): void {
+    const data = {
+      birthYear: this.birthYear,
+      gameState: {
+        player: {
+          name: this.gameState.player.name,
+          gender: this.gameState.player.gender,
+          role: this.gameState.player.role,
+          stats: Object.fromEntries(this.gameState.player.stats),
+          flags: Array.from(this.gameState.player.flags),
+        },
+        currentDate: this.gameState.currentDate.toISOString(),
+        actionPoints: this.gameState.actionPoints,
+        week: this.gameState.week,
+        firedEventIds: Array.from(this.gameState.firedEventIds),
+        log: this.gameState.log,
+        bandMembers: this.gameState.bandMembers,
+      },
+    };
+    localStorage.setItem(SAVE_KEY(slot), JSON.stringify(data));
+
+    // Update save index
+    const metas = GameLoop.getSaveMetas();
+    const meta: SaveMeta = {
+      slot,
+      playerName: this.gameState.player.name,
+      week: this.gameState.week,
+      age: this.getAge(),
+      savedAt: new Date().toISOString(),
+    };
+    const idx = metas.findIndex(m => m.slot === slot);
+    if (idx >= 0) metas[idx] = meta;
+    else metas.push(meta);
+    localStorage.setItem(SAVE_INDEX_KEY, JSON.stringify(metas));
+  }
+
+  public static hasSave(slot?: string): boolean {
+    if (slot) return localStorage.getItem(SAVE_KEY(slot)) !== null;
+    return GameLoop.getSaveMetas().length > 0;
+  }
+
+  public static getSaveMetas(): SaveMeta[] {
+    const raw = localStorage.getItem(SAVE_INDEX_KEY);
+    if (!raw) return [];
+    try { return JSON.parse(raw) as SaveMeta[]; } catch { return []; }
+  }
+
+  public static deleteSave(slot: string): void {
+    localStorage.removeItem(SAVE_KEY(slot));
+    const metas = GameLoop.getSaveMetas().filter(m => m.slot !== slot);
+    localStorage.setItem(SAVE_INDEX_KEY, JSON.stringify(metas));
+  }
+
+  /** Returns a GameLoop instance restored from a saved slot, or null if no save exists. */
+  public static fromSave(slot = 'autosave'): GameLoop | null {
+    const raw = localStorage.getItem(SAVE_KEY(slot));
+    if (!raw) return null;
+    try {
+      const data = JSON.parse(raw);
+      const gs = data.gameState;
+      const instance = new GameLoop({ name: gs.player.name, gender: gs.player.gender, role: gs.player.role });
+      instance.birthYear = data.birthYear;
+      instance.gameState = {
+        player: {
+          name: gs.player.name,
+          gender: gs.player.gender,
+          role: gs.player.role,
+          stats: new Map(Object.entries(gs.player.stats) as [string, number][]),
+          flags: new Set<string>(gs.player.flags),
+        },
+        currentDate: new Date(gs.currentDate),
+        actionPoints: gs.actionPoints,
+        week: gs.week,
+        firedEventIds: new Set<string>(gs.firedEventIds),
+        log: gs.log,
+        bandMembers: gs.bandMembers ?? [],
+      };
+      return instance;
+    } catch {
+      return null;
+    }
   }
 }

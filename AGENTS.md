@@ -10,6 +10,5 @@ The main branch for this project is called "main"
 When contributing to this project, add comment when you feel is necessary or you think should be reviewed
 
 ## Design
-
 The main design is in ./design/SmallGame.md but it can be outdated during development, you can also improve it.
 
