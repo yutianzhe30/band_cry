@@ -99,6 +99,43 @@ function showDebug() { emit('show-debug'); }
   margin-left: 1rem;
 }
 
+@media (max-width: 480px) {
+  .title {
+    font-size: 2.8rem;
+  }
+
+  .title-container {
+    padding: 1.2rem;
+    width: 90%;
+  }
+
+  .start-button {
+    display: block;
+    width: 100%;
+    margin-left: 0;
+    margin-top: 0.8rem;
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .save-slot-card {
+    padding: 0.45rem 0.65rem;
+    gap: 0.35rem;
+  }
+
+  .save-slot-time {
+    display: none;
+  }
+
+  .save-slot-name {
+    font-size: 0.85rem;
+  }
+
+  .save-slot-info {
+    font-size: 0.7rem;
+  }
+}
+
 .start-button:hover {
   background-color: #45a049;
 }

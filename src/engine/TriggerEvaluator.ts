@@ -25,6 +25,8 @@ export function evaluateRequirement(req: Requirement, gameState: GameState, age:
       if (req.day !== undefined) return monthMatch && d.getDate() === req.day;
       return monthMatch;
     }
+    case 'week_check':
+      return gameState.week >= req.min;
     case 'has_flag':
       return gameState.player.flags.has(req.flag);
     case 'not_flag':

@@ -581,3 +581,391 @@
         - stat: artistic_integrity
           op: subtract
           value: 3
+
+
+# ════════════════════════════════════════════════════════════
+# 恋爱线：NaNa（贝斯手，乐队成员）
+# ════════════════════════════════════════════════════════════
+
+# ─── 转折时刻 ────────────────────────────────────────────
+- id: event_nana_moment
+  oneTime: true
+  description: "排练结束，大家陆续离开。你在收拾东西，NaNa还坐在那里拨弄贝斯，随手弹着什么，不像练习，更像自言自语。你发现自己没有马上离开的打算。"
+  trigger:
+    and:
+      - type: week_check
+        min: 5
+      - type: not_flag
+        flag: nana_romance_path
+      - type: probability
+        chance: 0.45
+  choices:
+    - text: "坐下来，问她在弹什么"
+      result_text: "「没什么，就是一个音。」她抬头看了你一眼，然后重新低下头——但嘴角动了一下。"
+      effects:
+        - stat: affection
+          op: add
+          value: 18
+        - stat: sanity
+          op: add
+          value: 5
+      flags_add:
+        - nana_romance_path
+    - text: "跟她道了声晚安，出门了"
+      result_text: "你走到门口，回头看了一眼，她还在弹。那个画面不知道为什么，在路上一直跟着你。"
+      effects:
+        - stat: affection
+          op: add
+          value: 5
+      flags_add:
+        - nana_romance_path
+
+# ─── 两人单独出去 ─────────────────────────────────────────
+- id: event_nana_hangout
+  oneTime: true
+  description: "NaNa发来消息：「今晚有个乐队在地下室演，很小的场，没人知道。你来吗？」就你们两个，不是乐队活动，也没有什么特别的名义。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: nana_romance_path
+      - type: not_flag
+        flag: nana_hangout
+      - type: stat_check
+        stat: affection
+        op: greater_than
+        value: 22
+      - type: probability
+        chance: 0.5
+  choices:
+    - text: "去"
+      result_text: "那个地下室只能站三十个人，你们挤在角落里，音量大得说话要凑近耳边。她说了什么你没完全听清，但你点了头。"
+      effects:
+        - stat: affection
+          op: add
+          value: 20
+        - stat: sanity
+          op: add
+          value: 8
+      flags_add:
+        - nana_hangout
+    - text: "「今晚有事，下次吧」"
+      result_text: "她回了「好」，之后没有再提。你不确定有没有下次。"
+      effects:
+        - stat: affection
+          op: subtract
+          value: 5
+      flags_add:
+        - nana_hangout
+
+# ─── 深夜 ────────────────────────────────────────────────
+- id: event_nana_night_jam
+  oneTime: true
+  description: "凌晨一点，NaNa发来消息：「睡了吗。我在楼顶。带了琴，但弹的东西很乱。」"
+  trigger:
+    and:
+      - type: has_flag
+        flag: nana_hangout
+      - type: not_flag
+        flag: nana_night_jam
+      - type: stat_check
+        stat: affection
+        op: greater_than
+        value: 38
+      - type: probability
+        chance: 0.5
+  choices:
+    - text: "带上琴，上楼顶"
+      result_text: "你们对弹到快三点，没有方向，没有主题。她说「这种感觉比排练好玩多了」。你没反驳。"
+      effects:
+        - stat: affection
+          op: add
+          value: 22
+        - stat: artistic_integrity
+          op: add
+          value: 5
+        - stat: sanity
+          op: add
+          value: 12
+      flags_add:
+        - nana_night_jam
+    - text: "「太晚了，明天还要练」"
+      result_text: "她回了个「哦」，你放下手机，盯着天花板很久没睡着。"
+      effects:
+        - stat: affection
+          op: subtract
+          value: 8
+      flags_add:
+        - nana_night_jam
+
+# ─── 表白 ────────────────────────────────────────────────
+- id: event_confess_nana
+  oneTime: true
+  description: "排练前，只有你们两个人到了。她在调音，你坐在旁边，忽然觉得这种沉默有点难以为继。你知道自己在想什么，也知道说出来会改变很多事——包括乐队。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: nana_night_jam
+      - type: not_flag
+        flag: confessed_nana
+      - type: stat_check
+        stat: affection
+        op: greater_than
+        value: 60
+      - type: probability
+        chance: 0.55
+  choices:
+    - text: "说出来"
+      result_text: "她停下了调音，转过来看着你，表情你没见过。「你知道这很麻烦吧，」她说，然后笑了，「——但我也是。」"
+      effects:
+        - stat: affection
+          op: add
+          value: 25
+        - stat: sanity
+          op: add
+          value: 15
+        - stat: band_chemistry
+          op: subtract
+          value: 5
+      flags_add:
+        - confessed_nana
+        - nana_accepted
+    - text: "把那句话咽回去，说「没事，开始练吧」"
+      result_text: "她看了你一秒，好像想问什么，然后重新调起了音。你们排练了两个小时，比平时都安静。"
+      effects:
+        - stat: affection
+          op: add
+          value: 3
+        - stat: sanity
+          op: subtract
+          value: 8
+      flags_add:
+        - confessed_nana
+
+# ─── 正式在一起 ──────────────────────────────────────────
+- id: event_relationship_nana
+  oneTime: true
+  description: "NaNa在排练后单独留下来问你：「那天之后你想好了吗，我们怎么处理这件事——乐队的事我是说，还有……我们的事。」她很少这么直接，但她现在是。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: nana_accepted
+      - type: not_flag
+        flag: in_relationship
+      - type: probability
+        chance: 0.65
+  choices:
+    - text: "「在一起。乐队的事，我们边走边看。」"
+      result_text: "她点了点头，说「好」，然后补了一句「你要是因为这个弹坏了就别怪我」。你笑了很久。"
+      effects:
+        - stat: affection
+          op: add
+          value: 18
+        - stat: sanity
+          op: add
+          value: 20
+        - stat: band_chemistry
+          op: subtract
+          value: 8
+      flags_add:
+        - in_relationship
+    - text: "「我想在一起，但乐队优先——如果有冲突的话」"
+      result_text: "她沉默了一下，说「那我也接受」。你们没有牵手，但某件事已经确定了。"
+      effects:
+        - stat: affection
+          op: add
+          value: 10
+        - stat: band_chemistry
+          op: add
+          value: 5
+      flags_add:
+        - in_relationship
+
+
+# ════════════════════════════════════════════════════════════
+# 考试事件（每 ~9 周触发一次，共 3 次）
+# 智力（intelligence）决定可选择的应对方式
+# ════════════════════════════════════════════════════════════
+
+# ─── 期中考 ───────────────────────────────────────────────
+- id: event_exam_midterm
+  oneTime: true
+  description: "期中考试周到了。图书馆挤满了人，咖啡因和焦虑混成一种特殊的气味。你翻开复习资料，意识到这段时间投入了多少——或者多少没有投入。"
+  trigger:
+    and:
+      - type: week_check
+        min: 9
+      - type: not_flag
+        flag: exam_midterm_done
+  choices:
+    - text: "胸有成竹，正常发挥"
+      requirements:
+        - type: stat_check
+          stat: intelligence
+          op: greater_than_or_equal
+          value: 55
+      result_text: "你稳定发挥，成绩不错。考完走出教室，阳光晒得让人想发呆。"
+      effects:
+        - stat: sanity
+          op: add
+          value: 8
+        - stat: charm
+          op: add
+          value: 3
+      flags_add:
+        - exam_midterm_done
+    - text: "挣扎应对，凑合过关"
+      result_text: "你拼命把脑子里的碎片知识拼凑成答案，写完最后一题时手已经在抖。不知道过没过。"
+      effects:
+        - stat: sanity
+          op: subtract
+          value: 10
+        - stat: health
+          op: subtract
+          value: 5
+      flags_add:
+        - exam_midterm_done
+    - text: "完全没复习，直接摆烂"
+      requirements:
+        - type: stat_check
+          stat: intelligence
+          op: less_than
+          value: 35
+      result_text: "你交了一半答案的试卷。系里发来了警告邮件，还要额外补考。"
+      effects:
+        - stat: sanity
+          op: subtract
+          value: 18
+        - stat: money
+          op: subtract
+          value: 300
+      flags_add:
+        - exam_midterm_done
+
+# ─── 期末考 ───────────────────────────────────────────────
+- id: event_exam_final
+  oneTime: true
+  description: "期末了。这次考试比期中更重要——关系到能不能顺利升学。宿舍里的室友都在开夜车，窗外飘着热饮和疲惫的气息。"
+  trigger:
+    and:
+      - type: week_check
+        min: 18
+      - type: has_flag
+        flag: exam_midterm_done
+      - type: not_flag
+        flag: exam_final_done
+  choices:
+    - text: "全力以赴，争取高分"
+      requirements:
+        - type: stat_check
+          stat: intelligence
+          op: greater_than_or_equal
+          value: 60
+      result_text: "你连续三天只睡四个小时，但成绩单出来的时候，还是值得的。"
+      effects:
+        - stat: intelligence
+          op: add
+          value: 5
+        - stat: sanity
+          op: subtract
+          value: 8
+        - stat: health
+          op: subtract
+          value: 6
+        - stat: money
+          op: add
+          value: 500
+      flags_add:
+        - exam_final_done
+    - text: "稳扎稳打，求个及格"
+      result_text: "你没有把睡眠压榨干净，考试也就那样。过了，但没什么好骄傲的。"
+      effects:
+        - stat: sanity
+          op: subtract
+          value: 12
+        - stat: health
+          op: subtract
+          value: 4
+      flags_add:
+        - exam_final_done
+    - text: "已经放弃了，只求别挂科"
+      requirements:
+        - type: stat_check
+          stat: intelligence
+          op: less_than
+          value: 40
+      result_text: "你挂了两科。补考费和羞耻感加在一起，比任何事都贵。"
+      effects:
+        - stat: sanity
+          op: subtract
+          value: 25
+        - stat: money
+          op: subtract
+          value: 800
+        - stat: artistic_integrity
+          op: subtract
+          value: 5
+      flags_add:
+        - exam_final_done
+
+# ─── 下学期期末考 ─────────────────────────────────────────
+- id: event_exam_second_final
+  oneTime: true
+  description: "又是一年期末。你已经经历过一次了，知道这种时候是什么滋味——但知道归知道，该来的还是来了。"
+  trigger:
+    and:
+      - type: week_check
+        min: 27
+      - type: has_flag
+        flag: exam_final_done
+      - type: not_flag
+        flag: exam_second_final_done
+  choices:
+    - text: "老手了，从容应对"
+      requirements:
+        - type: stat_check
+          stat: intelligence
+          op: greater_than_or_equal
+          value: 65
+      result_text: "你把备考时间压缩到刚刚好，剩下的时间还是给了音乐。两件事都没有垮。"
+      effects:
+        - stat: sanity
+          op: add
+          value: 5
+        - stat: technique
+          op: add
+          value: 3
+        - stat: money
+          op: add
+          value: 600
+      flags_add:
+        - exam_second_final_done
+    - text: "硬撑过去"
+      result_text: "你用意志力把自己钉在书桌前。考完之后倒头就睡了十四个小时。"
+      effects:
+        - stat: sanity
+          op: subtract
+          value: 15
+        - stat: health
+          op: subtract
+          value: 8
+      flags_add:
+        - exam_second_final_done
+    - text: "这次真的崩了，什么都顾不上"
+      requirements:
+        - type: stat_check
+          stat: intelligence
+          op: less_than
+          value: 38
+      result_text: "挂科、补考、家长电话。你坐在学校台阶上，不知道接下来怎么办。"
+      effects:
+        - stat: sanity
+          op: subtract
+          value: 30
+        - stat: money
+          op: subtract
+          value: 1200
+        - stat: band_chemistry
+          op: subtract
+          value: 10
+      flags_add:
+        - exam_second_final_done

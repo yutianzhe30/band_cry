@@ -1,6 +1,7 @@
 <template>
   <div class="game-root" :class="`scene--${currentScene}`">
-    <!-- Save dialog -->
+
+    <!-- Save dialog (modal overlay) -->
     <SaveSlotDialog
       v-if="showSaveDialog"
       :metas="saveMetas"
@@ -11,65 +12,47 @@
       @close="showSaveDialog = false"
     />
 
-    <!-- Summary overlay (above everything) -->
-    <transition name="fade">
-      <div v-if="state.phase === 'summary'" class="summary-overlay">
-        <div class="summary-box">
-          <p class="summary-title">── 本周结算 ──</p>
-          <p v-for="(line, i) in state.weekSummary" :key="i" class="summary-line">{{ line }}</p>
-          <button class="summary-continue" @click="dismissSummary">继续 →</button>
-        </div>
-      </div>
-    </transition>
-
-    <!-- Background -->
+    <!-- ── Background ── -->
     <div class="scene-bg" :style="bgStyle"></div>
     <div class="scene-overlay"></div>
 
-    <!-- Header bar -->
+    <!-- ── Header ── -->
     <header class="game-header">
       <span class="hdr-name">{{ state.playerName }}</span>
       <span class="hdr-sep">·</span>
       <span class="hdr-week">第 {{ state.week }} 周</span>
       <span class="hdr-sep">·</span>
-      <span class="hdr-age">{{ state.age }} 岁</span>
-      <span class="hdr-sep">·</span>
       <span class="hdr-date">{{ formattedDate }}</span>
       <button class="hdr-save-btn" @click="openSaveDialog">保存</button>
     </header>
 
-    <!-- TabBar -->
+    <!-- ── TabBar ── -->
     <TabBar
       :current-tab="currentTab"
       :locked="state.phase !== 'action'"
       @change="currentTab = $event"
     />
 
-    <!-- Main body: content switches by tab -->
-    <div class="game-body">
+    <!-- ── Content area: character stage / band / log ── -->
+    <div class="content-area">
 
-      <!-- ACTION TAB -->
+      <!-- Action tab: character stage -->
       <template v-if="currentTab === 'action'">
-        <aside class="sidebar">
-          <StatBar
-            :stats="state.stats"
-            :stat-defs="statDefs"
-            :player-name="state.playerName"
-            :player-role="state.playerRole"
-          />
-        </aside>
-        <main class="scene-area">
-          <FlavorText :week="state.week" />
-        </main>
+        <div class="character-stage">
+          <!-- Character sprite placeholder -->
+          <div class="character-sprite">
+            <span class="sprite-label">人物立绘</span>
+          </div>
+        </div>
       </template>
 
-      <!-- BAND TAB -->
+      <!-- Band tab -->
       <BandPage
         v-else-if="currentTab === 'band'"
         :band-members="state.bandMembers"
       />
 
-      <!-- LOG TAB -->
+      <!-- Log tab -->
       <LogPage
         v-else-if="currentTab === 'log'"
         :entries="state.log"
@@ -77,41 +60,82 @@
 
     </div>
 
-    <!-- Footer: ActionPanel / EventCard / Ending (always present) -->
-    <footer class="dialog-zone">
-      <transition name="slide-up" mode="out-in">
+    <!-- ── VN Box (shown on action tab always; on other tabs only for events) ── -->
+    <div
+      v-if="currentTab === 'action' || state.phase !== 'action'"
+      class="vn-box"
+      :class="{ 'vn-box--event': state.phase === 'event', 'vn-box--ending': state.phase === 'ending' }"
+    >
 
-        <!-- ACTION phase on action tab -->
+      <!-- Mini stat strip (only in action tab) -->
+      <div v-if="currentTab === 'action'" class="stat-strip">
+        <span
+          v-for="s in miniStats"
+          :key="s.id"
+          class="stat-chip"
+          :class="statChipClass(s.id, s.value)"
+        >
+          <span class="stat-chip-icon">{{ s.icon }}</span>
+          <span class="stat-chip-val">{{ Math.round(s.value) }}</span>
+        </span>
+        <span class="stat-chip money-chip">
+          <span class="stat-chip-icon">¥</span>
+          <span class="stat-chip-val">{{ Math.round(state.stats['money'] ?? 0) }}</span>
+        </span>
+        <span v-if="hasMetLoveInterest" class="stat-chip love-chip">
+          <span class="stat-chip-icon">💕</span>
+          <span class="stat-chip-val">{{ Math.round(state.stats['affection'] ?? 0) }}</span>
+        </span>
+      </div>
+
+      <!-- ── ACTION phase ── -->
+      <template v-if="state.phase === 'action' && currentTab === 'action'">
+        <p class="vn-narrative">{{ flavorText }}</p>
         <ActionPanel
-          v-if="state.phase === 'action' && currentTab === 'action'"
-          key="action"
           :actions="availableActions"
           :current-a-p="state.ap"
           :week="state.week"
           @perform="onPerformAction"
           @end-week="onEndWeek"
         />
+      </template>
 
-        <!-- EVENT phase (shown regardless of active tab; tab is locked) -->
-        <EventCard
-          v-else-if="state.phase === 'event' && state.currentEvent"
-          key="event"
-          :event="state.currentEvent"
-          :game-state="rawGameState"
-          :age="state.age"
-          @choose="onChooseEvent"
-        />
-
-        <!-- ENDING phase -->
-        <div v-else-if="state.phase === 'ending' && state.currentEnding" key="ending" class="ending-panel">
-          <p class="ending-title">{{ state.currentEnding.title }}</p>
-          <p class="ending-desc">{{ state.currentEnding.description }}</p>
-          <p v-if="state.currentEnding.epilogue" class="ending-epilogue">{{ state.currentEnding.epilogue }}</p>
-          <button class="ending-restart" @click="$emit('restart')">重新开始</button>
+      <!-- ── EVENT phase ── -->
+      <template v-else-if="state.phase === 'event' && state.currentEvent">
+        <p class="vn-event-text">{{ state.currentEvent.description }}</p>
+        <p v-if="state.currentEvent.narrative" class="vn-event-narrative">{{ state.currentEvent.narrative }}</p>
+        <div class="vn-choices">
+          <button
+            v-for="(choice, i) in availableChoices"
+            :key="i"
+            class="vn-choice-btn"
+            @click="onChooseEvent(choice)"
+          >
+            <span class="choice-arrow">▸</span>
+            {{ choice.text }}
+          </button>
         </div>
+      </template>
 
-      </transition>
-    </footer>
+      <!-- ── SUMMARY phase ── -->
+      <template v-else-if="state.phase === 'summary'">
+        <p class="vn-summary-title">── 本周结算 ──</p>
+        <div class="vn-summary-lines">
+          <p v-for="(line, i) in state.weekSummary" :key="i" class="vn-summary-line">{{ line }}</p>
+        </div>
+        <button class="vn-continue-btn" @click="dismissSummary">继续 →</button>
+      </template>
+
+      <!-- ── ENDING phase ── -->
+      <template v-else-if="state.phase === 'ending' && state.currentEnding">
+        <p class="ending-title">{{ state.currentEnding.title }}</p>
+        <p class="ending-desc">{{ state.currentEnding.description }}</p>
+        <p v-if="state.currentEnding.epilogue" class="ending-epilogue">{{ state.currentEnding.epilogue }}</p>
+        <button class="ending-restart" @click="$emit('restart')">重新开始</button>
+      </template>
+
+    </div>
+
   </div>
 </template>
 
@@ -120,15 +144,14 @@ import { reactive, computed, onMounted, ref } from 'vue';
 import { GameLoop } from '../engine/GameLoop';
 import type { SaveMeta } from '../engine/GameLoop';
 import { StatSystem } from '../engine/StatSystem';
+import { checkRequirements } from '../engine/TriggerEvaluator';
 import type { GameEvent, GameEnding, EventChoice, LogEntry, GameState, GameAction, BandMember } from '../types/GameTypes';
 import StatBar from './StatBar.vue';
-import EventCard from './EventCard.vue';
 import ActionPanel from './ActionPanel.vue';
 import SaveSlotDialog from './SaveSlotDialog.vue';
 import TabBar from './TabBar.vue';
-import FlavorText from './FlavorText.vue';
-import LogPage from './LogPage.vue';
 import BandPage from './BandPage.vue';
+import LogPage from './LogPage.vue';
 import probeRoomBg from '../assets/images/ProbeRoom1.png';
 
 const props = defineProps<{
@@ -149,7 +172,6 @@ let gameLoop = (loadSlot && GameLoop.fromSave(loadSlot)) || new GameLoop({
 });
 
 const statSystem = StatSystem.getInstance();
-const statDefs = statSystem.statDefinitions;
 
 // ── Reactive UI state ─────────────────────────────────────
 interface UIState {
@@ -184,7 +206,6 @@ const state = reactive<UIState>({
   currentDate: new Date(),
 });
 
-// ── Tab state ─────────────────────────────────────────────
 const currentTab = ref<'action' | 'band' | 'log'>('action');
 
 const rawGameState = computed((): GameState => gameLoop.gameState);
@@ -193,7 +214,6 @@ function syncState() {
   const gs = gameLoop.gameState;
   const statsObj: Record<string, number> = {};
   gs.player.stats.forEach((v, k) => { statsObj[k] = v; });
-
   state.stats = statsObj;
   state.ap = gs.actionPoints;
   state.week = gs.week;
@@ -203,7 +223,19 @@ function syncState() {
   state.currentDate = new Date(gs.currentDate);
 }
 
+// ── Computed ──────────────────────────────────────────────
 const availableActions = computed<GameAction[]>(() => gameLoop.getAvailableActions());
+
+const availableChoices = computed(() => {
+  if (!state.currentEvent) return [];
+  return state.currentEvent.choices.filter(c =>
+    !c.requirements || checkRequirements(c.requirements, rawGameState.value, state.age)
+  );
+});
+
+const hasMetLoveInterest = computed(() =>
+  gameLoop.gameState.player.flags.has('nana_romance_path')
+);
 
 const formattedDate = computed(() => {
   const d = state.currentDate;
@@ -216,17 +248,53 @@ const currentScene = computed(() => {
   return 'default';
 });
 
-const bgStyle = computed(() => ({
-  backgroundImage: `url(${probeRoomBg})`,
-}));
+const bgStyle = computed(() => ({ backgroundImage: `url(${probeRoomBg})` }));
+
+// Mini stat strip: show key stats except money and affection (handled separately)
+interface MiniStat { id: string; icon: string; value: number }
+const MINI_STAT_CONFIG: { id: string; icon: string }[] = [
+  { id: 'technique',         icon: '🎸' },
+  { id: 'intelligence',      icon: '📖' },
+  { id: 'charm',             icon: '✨' },
+  { id: 'sanity',            icon: '💜' },
+  { id: 'health',            icon: '❤️' },
+  { id: 'fame',              icon: '⭐' },
+  { id: 'band_chemistry',    icon: '🎵' },
+  { id: 'artistic_integrity',icon: '🎨' },
+];
+
+const miniStats = computed<MiniStat[]>(() =>
+  MINI_STAT_CONFIG.map(c => ({ id: c.id, icon: c.icon, value: state.stats[c.id] ?? 0 }))
+);
+
+function statChipClass(id: string, val: number): string {
+  if (val >= 70) return 'stat-chip--high';
+  if (val >= 35) return 'stat-chip--mid';
+  return 'stat-chip--low';
+}
+
+// Flavor text: deterministic per week
+const FLAVOR_POOL = [
+  '这周你感觉状态不错，排练室里的空气都带着些许兴奋。',
+  '窗外飘来阵阵小雨，你坐在排练室里发了很久的呆。',
+  '最近城里来了几支新乐队，你在想自己差距有多大。',
+  '你的手指在闲暇时总是不自觉地拨弄琴弦，停不下来。',
+  '地下室的隔音很差，楼上的脚步声一直干扰你的练习。',
+  '有人说，音乐是孤独者的语言。你深有同感。',
+  '本周让你意识到，台上的一分钟需要台下十年功。',
+  '你在回家路上哼起自己写的旋律，路人给了你一个奇怪的眼神。',
+  '排练结束后，你一个人坐在空旷的房间里，感受着残留的回声。',
+  '这周的创作遇到了瓶颈，灵感就像干涸的河床，一点都挤不出来。',
+  '今天天气很好，你想出去走走，但又放不下手里的乐器。',
+  '生活有时候就是这样——平静，但充满了某种无法言说的期待。',
+];
+const flavorText = computed(() => FLAVOR_POOL[state.week % FLAVOR_POOL.length]);
 
 // ── Handlers ──────────────────────────────────────────────
 function onPerformAction(actionId: string) {
   gameLoop.performAction(actionId);
   syncState();
-  if (gameLoop.gameState.actionPoints === 0) {
-    onEndWeek();
-  }
+  if (gameLoop.gameState.actionPoints === 0) onEndWeek();
 }
 
 function onEndWeek() {
@@ -275,6 +343,7 @@ function onLoadFrom(slot: string) {
     state.currentEnding = null;
     state.weekSummary = [];
     currentTab.value = 'action';
+    showSaveDialog.value = false;
   }
 }
 
@@ -308,7 +377,6 @@ function onChooseEvent(choice: EventChoice) {
     state.phase = 'summary';
     pendingEvent = null;
     pendingEnding = null;
-
     const ending = gameLoop['endingManager'].checkEndings(gameLoop.gameState, gameLoop.getAge());
     if (ending) pendingEnding = ending;
   } else {
@@ -350,12 +418,17 @@ onMounted(() => syncState());
 .scene-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(4,4,18,0.7) 0%, rgba(4,4,18,0.55) 50%, rgba(4,4,18,0.92) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(4, 4, 18, 0.55) 0%,
+    rgba(4, 4, 18, 0.35) 40%,
+    rgba(4, 4, 18, 0.85) 100%
+  );
   z-index: 1;
 }
 
-.scene--event .scene-bg { filter: brightness(0.6) saturate(0.7); }
-.scene--ending .scene-bg { filter: brightness(0.35) grayscale(0.5); }
+.scene--event .scene-bg { filter: brightness(0.55) saturate(0.7); }
+.scene--ending .scene-bg { filter: brightness(0.3) grayscale(0.6); }
 
 /* ── Header ── */
 .game-header {
@@ -363,133 +436,231 @@ onMounted(() => syncState());
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 1.2rem;
-  background: rgba(4, 4, 18, 0.75);
-  border-bottom: 1px solid rgba(180, 120, 255, 0.15);
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  background: rgba(4, 4, 18, 0.72);
+  border-bottom: 1px solid rgba(180, 120, 255, 0.12);
   backdrop-filter: blur(8px);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
 }
 
 .hdr-name { color: #e0b4ff; font-weight: 700; }
 .hdr-week { color: #ccc; }
-.hdr-age  { color: #ffd200; }
-.hdr-date { color: #777; }
-.hdr-sep  { color: #444; }
+.hdr-date { color: #666; }
+.hdr-sep  { color: #333; }
+
 .hdr-save-btn {
   margin-left: auto;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 0.3rem;
   color: #aaa;
-  font-size: 0.72rem;
-  padding: 0.18rem 0.6rem;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.55rem;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.hdr-save-btn:hover { background: rgba(255,255,255,0.13); color: #eee; }
+.hdr-save-btn:hover { background: rgba(255, 255, 255, 0.13); color: #eee; }
 
-/* ── Body ── */
-.game-body {
+/* ── Content area ── */
+.content-area {
   position: relative;
   z-index: 5;
-  display: flex;
   flex: 1;
-  gap: 0.8rem;
-  padding: 0.8rem;
+  display: flex;
   overflow: hidden;
 }
 
-.sidebar {
+/* ── Character stage (action tab) ── */
+.character-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.character-sprite {
+  width: clamp(140px, 22vw, 220px);
+  height: clamp(220px, 45vh, 360px);
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+.sprite-label {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.08em;
+}
+
+/* ── VN Box ── */
+.vn-box {
+  position: relative;
+  z-index: 10;
+  background: rgba(4, 4, 18, 0.92);
+  border-top: 1px solid rgba(180, 120, 255, 0.2);
+  backdrop-filter: blur(16px);
+  padding: 0.7rem 1rem 0.9rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  width: 180px;
+  gap: 0.55rem;
   flex-shrink: 0;
 }
 
-.scene-area {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.vn-box--event {
+  border-top-color: rgba(224, 64, 251, 0.35);
 }
 
-/* ── Summary overlay (above all content) ── */
-.summary-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(4, 4, 18, 0.75);
-  z-index: 50;
-  backdrop-filter: blur(4px);
+.vn-box--ending {
+  border-top-color: rgba(224, 64, 251, 0.6);
 }
 
-.summary-box {
-  background: rgba(10, 10, 35, 0.97);
-  border: 1px solid rgba(180, 120, 255, 0.3);
-  border-radius: 0.6rem;
-  padding: 1.2rem 1.8rem;
-  min-width: 260px;
-  max-width: 420px;
+/* ── Mini stat strip ── */
+.stat-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.68rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.stat-chip-icon { font-size: 0.65rem; line-height: 1; }
+.stat-chip-val  { color: #bbb; font-variant-numeric: tabular-nums; }
+
+.stat-chip--high { border-color: rgba(67, 233, 123, 0.25); }
+.stat-chip--high .stat-chip-val { color: #80e8a0; }
+.stat-chip--mid  { border-color: rgba(255, 210, 0, 0.2); }
+.stat-chip--mid  .stat-chip-val { color: #ffd200; }
+.stat-chip--low  { border-color: rgba(249, 83, 198, 0.25); }
+.stat-chip--low  .stat-chip-val { color: #f580c0; }
+
+.money-chip { border-color: rgba(255, 210, 0, 0.3); }
+.money-chip .stat-chip-val { color: #ffd200; font-weight: 600; }
+
+.love-chip { border-color: rgba(255, 100, 150, 0.35); }
+.love-chip .stat-chip-val { color: #ff80a8; }
+
+/* ── Flavor text (action phase) ── */
+.vn-narrative {
+  font-size: 0.88rem;
+  color: rgba(210, 195, 240, 0.75);
+  font-style: italic;
+  line-height: 1.65;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ── Event ── */
+.vn-event-text {
+  font-size: 0.95rem;
+  color: #f0eefc;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.vn-event-narrative {
+  font-size: 0.82rem;
+  color: #aaa;
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0;
+  border-left: 2px solid rgba(224, 64, 251, 0.3);
+  padding-left: 0.65rem;
+}
+
+.vn-choices {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  text-align: center;
+  gap: 0.4rem;
 }
 
-.summary-title {
-  font-size: 0.75rem;
+.vn-choice-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(224, 64, 251, 0.06);
+  border: 1px solid rgba(224, 64, 251, 0.28);
+  border-radius: 0.4rem;
+  color: #e8e4f8;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  line-height: 1.4;
+  font-family: inherit;
+  /* Large touch target */
+  min-height: 48px;
+}
+
+.vn-choice-btn:hover {
+  background: rgba(224, 64, 251, 0.16);
+  border-color: rgba(224, 64, 251, 0.6);
+  transform: translateX(3px);
+}
+
+.choice-arrow {
+  color: #e040fb;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+/* ── Summary ── */
+.vn-summary-title {
+  font-size: 0.72rem;
   color: #666;
   letter-spacing: 0.12em;
   margin: 0;
+  text-align: center;
 }
 
-.summary-line {
+.vn-summary-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.vn-summary-line {
   font-size: 0.88rem;
   color: #ccc;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-.summary-continue {
-  margin-top: 0.6rem;
-  background: rgba(224, 64, 251, 0.12);
+.vn-continue-btn {
+  align-self: flex-end;
+  background: rgba(224, 64, 251, 0.1);
   border: 1px solid rgba(224, 64, 251, 0.4);
   border-radius: 0.35rem;
   color: #e040fb;
   padding: 0.4rem 1rem;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   cursor: pointer;
   transition: background 0.15s;
+  font-family: inherit;
 }
-.summary-continue:hover { background: rgba(224, 64, 251, 0.22); }
+.vn-continue-btn:hover { background: rgba(224, 64, 251, 0.22); }
 
-/* ── Dialog zone ── */
-.dialog-zone {
-  position: relative;
-  z-index: 10;
-  background: rgba(4, 4, 18, 0.9);
-  border-top: 1px solid rgba(180, 120, 255, 0.2);
-  backdrop-filter: blur(12px);
-  padding: 0.9rem 1.2rem;
-  min-height: 180px;
-  max-height: 260px;
-}
-
-/* ── Ending panel ── */
-.ending-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  height: 100%;
-}
-
+/* ── Ending ── */
 .ending-title {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #e040fb;
   text-shadow: 0 0 16px rgba(224, 64, 251, 0.5);
@@ -499,7 +670,7 @@ onMounted(() => syncState());
 .ending-desc {
   font-size: 0.9rem;
   color: #ddd;
-  line-height: 1.65;
+  line-height: 1.7;
   margin: 0;
 }
 
@@ -514,7 +685,6 @@ onMounted(() => syncState());
 }
 
 .ending-restart {
-  margin-top: auto;
   align-self: flex-start;
   background: rgba(224, 64, 251, 0.1);
   border: 1px solid rgba(224, 64, 251, 0.4);
@@ -524,17 +694,65 @@ onMounted(() => syncState());
   font-size: 0.82rem;
   cursor: pointer;
   transition: background 0.15s;
+  font-family: inherit;
 }
 .ending-restart:hover { background: rgba(224, 64, 251, 0.22); }
 
-/* ── Transitions ── */
-.fade-enter-active,
-.fade-leave-active { transition: opacity 0.3s; }
-.fade-enter-from,
-.fade-leave-to { opacity: 0; }
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .game-header {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.7rem;
+    gap: 0.3rem;
+  }
 
-.slide-up-enter-active,
-.slide-up-leave-active { transition: opacity 0.2s, transform 0.2s; }
-.slide-up-enter-from { opacity: 0; transform: translateY(12px); }
-.slide-up-leave-to   { opacity: 0; transform: translateY(-6px); }
+  .hdr-date { display: none; }
+  .hdr-sep:last-of-type { display: none; }
+
+  .vn-box {
+    padding: 0.5rem 0.75rem 0.65rem;
+    max-height: 60vh;
+    overflow-y: auto;
+    gap: 0.4rem;
+  }
+
+  .stat-strip {
+    gap: 0.22rem;
+    padding-bottom: 0.35rem;
+  }
+
+  .stat-chip {
+    font-size: 0.58rem;
+    padding: 0.07rem 0.25rem;
+  }
+
+  .stat-chip-icon { font-size: 0.6rem; }
+
+  .vn-narrative {
+    font-size: 0.82rem;
+  }
+
+  .vn-event-text {
+    font-size: 0.88rem;
+  }
+
+  .vn-choice-btn {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+    min-height: 44px;
+  }
+
+  .ending-title {
+    font-size: 1.1rem;
+  }
+
+  .ending-desc {
+    font-size: 0.85rem;
+  }
+
+  .character-sprite {
+    width: clamp(90px, 18vw, 140px);
+    height: clamp(140px, 28vh, 200px);
+  }
+}
 </style>

@@ -131,6 +131,7 @@ function goBack() {
   width: 100%;
   color: white;
   text-align: center;
+  overflow: hidden;
 }
 
 .character-preview {
@@ -299,5 +300,81 @@ function goBack() {
 .confirm-button {
   background-color: #4CAF50;
   color: white;
+}
+
+@media (max-width: 600px) {
+  .character-creation-page {
+    flex-direction: column;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .character-preview {
+    flex: none;
+    height: 220px;
+    padding: 0;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .preview-content {
+    justify-content: center;
+    align-items: center;
+  }
+
+  .character-image {
+    height: 200px;
+    width: auto;
+    max-width: 100%;
+    max-height: unset;
+    position: static;
+    transform: none;
+    bottom: unset;
+    left: unset;
+    margin-bottom: 0;
+  }
+
+  .image-placeholder {
+    height: 160px;
+    width: 120px;
+    position: static;
+    transform: none;
+    bottom: unset;
+    left: unset;
+  }
+
+  .story {
+    display: none;
+  }
+
+  .form-container {
+    flex: none;
+    padding: 1.2rem 1rem 2rem;
+  }
+
+  .title {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .selection-group {
+    margin-bottom: 1rem;
+  }
+
+  .option-label {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.9rem;
+  }
+
+  .name-input {
+    max-width: 100%;
+    width: 80%;
+  }
 }
 </style>

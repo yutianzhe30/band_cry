@@ -22,3 +22,9 @@
 - id: band_chemistry
   name: 乐队默契
   description: 乐队成员之间的关系和协作顺畅度。
+- id: intelligence
+  name: 智力
+  description: 你的学习能力与知识积累，影响考试表现。
+- id: affection
+  name: 心动值
+  description: 你与NaNa之间的感情深度。

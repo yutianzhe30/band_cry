@@ -56,6 +56,7 @@ export type Requirement =
   | { type: 'role_check'; role: PlayerCharacter['role'] }
   | { type: 'age_check'; is: number }
   | { type: 'date_check'; month: number; day?: number }
+  | { type: 'week_check'; min: number }   // fires when week >= min
   | { type: 'has_flag'; flag: string }
   | { type: 'not_flag'; flag: string }
   | { type: 'probability'; chance: number };

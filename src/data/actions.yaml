@@ -1,118 +1,110 @@
 # ============================================================
 # 每周行动库 (actions.yaml)
+# 设计原则：保持平衡状态很困难，每周只有 4AP，必须取舍
 # ============================================================
 
 - id: practice
-  name: 精进琴技
-  description: "日复一日的练习，是通往大师的唯一道路。"
+  name: 练琴
+  description: "日复一日的练习，是通往大师的唯一道路。长时间练习耗费精神，手指和身体也会疲累。"
   cost:
     ap: 1
   effects:
     - stat: technique
       op: add
-      value: 3
+      value: 4
     - stat: sanity
       op: subtract
-      value: 2
-
-- id: compose
-  name: 创作新歌
-  description: "将脑海中混沌的旋律变为现实。"
-  cost:
-    ap: 1
-  effects:
-    - stat: artistic_integrity
-      op: add
-      value: 3
-    - stat: sanity
-      op: subtract
-      value: 3
-    - stat: charm
-      op: add
-      value: 1
-
-- id: gig
-  name: 寻找演出
-  description: "只有站上舞台，才能让更多人听到你的声音。"
-  cost:
-    ap: 1
-  effects:
-    - stat: fame
-      op: add
-      value: 3
-    - stat: charm
-      op: add
-      value: 2
-    - stat: money
-      op: add
-      value: 100
+      value: 4
     - stat: health
       op: subtract
       value: 2
 
 - id: rehearse
-  name: 乐队合练
-  description: "默契不是天生的，是一次次排练磨出来的。"
+  name: 排练
+  description: "乐队合练消耗巨大，但默契就是这样磨出来的。"
   cost:
     ap: 1
   effects:
     - stat: band_chemistry
       op: add
-      value: 5
+      value: 6
     - stat: technique
       op: add
       value: 1
     - stat: sanity
       op: subtract
-      value: 1
+      value: 3
 
 - id: socialize
-  name: 社交鬼混
-  description: "在圈子里混个脸熟，或者只是和朋友喝杯酒放松一下。"
+  name: 社交
+  description: "和朋友喝杯酒，聊聊天——是目前最主要的精神出口，但总要花钱。"
   cost:
     ap: 1
   effects:
     - stat: charm
       op: add
       value: 3
-    - stat: band_chemistry
-      op: add
-      value: 3
     - stat: sanity
       op: add
-      value: 5
+      value: 8
     - stat: money
       op: subtract
-      value: 60
+      value: 70
+
+- id: study
+  name: 学习
+  description: "应付课业，备战考试。枯燥但必要，智力慢慢积累，精神消耗不少。"
+  cost:
+    ap: 1
+  effects:
+    - stat: intelligence
+      op: add
+      value: 6
+    - stat: sanity
+      op: subtract
+      value: 4
 
 - id: work
-  name: 打工赚钱
-  description: "音乐不能当饭吃……至少现在还不能。"
+  name: 工作
+  description: "音乐不能当饭吃。打工赚钱的同时，身体和精神都在流失。"
   cost:
     ap: 1
   effects:
     - stat: money
       op: add
-      value: 250
+      value: 280
     - stat: health
       op: subtract
       value: 2
     - stat: sanity
       op: subtract
-      value: 1
+      value: 4
     - stat: artistic_integrity
       op: subtract
       value: 1
 
-- id: rest
-  name: 休息放松
-  description: "在彻底崩溃之前好好睡一觉。"
+- id: workout
+  name: 健身
+  description: "花半天锻炼身体，维持基本体能。需要牺牲两个行动档。"
   cost:
-    ap: 1
+    ap: 2
   effects:
     - stat: health
       op: add
-      value: 8
+      value: 15
     - stat: sanity
       op: add
-      value: 8
+      value: 4
+
+- id: rest
+  name: 睡觉
+  description: "把整整一天交给床铺。什么都不做，但身心大幅恢复。"
+  cost:
+    ap: 4
+  effects:
+    - stat: health
+      op: add
+      value: 35
+    - stat: sanity
+      op: add
+      value: 28

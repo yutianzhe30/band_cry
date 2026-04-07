@@ -47,6 +47,8 @@ export class StatSystem {
     stats.set('money', 500);
     stats.set('health', 100);
     stats.set('sanity', 100);
+    stats.set('intelligence', 30); // baseline academic ability
+    stats.set('affection', 0); // starts at 0 until love interest is met
 
     return stats;
   }
