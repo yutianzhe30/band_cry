@@ -687,6 +687,7 @@
 
 # ─── 转折时刻 ────────────────────────────────────────────
 - id: event_nana_moment
+  visual: "nana"
   oneTime: true
   description: "排练结束，大家陆续离开。你在收拾东西，NaNa还坐在那里拨弄贝斯，随手弹着什么，不像练习，更像自言自语。你发现自己没有马上离开的打算。"
   trigger:
@@ -720,6 +721,7 @@
 
 # ─── 两人单独出去 ─────────────────────────────────────────
 - id: event_nana_hangout
+  visual: "nana"
   oneTime: true
   description: "NaNa发来消息：「今晚有个乐队在地下室演，很小的场，没人知道。你来吗？」就你们两个，不是乐队活动，也没有什么特别的名义。"
   trigger:
@@ -757,6 +759,7 @@
 
 # ─── 深夜 ────────────────────────────────────────────────
 - id: event_nana_night_jam
+  visual: "nana"
   oneTime: true
   description: "凌晨一点，NaNa发来消息：「睡了吗。我在楼顶。带了琴，但弹的东西很乱。」"
   trigger:
@@ -797,6 +800,7 @@
 
 # ─── 表白 ────────────────────────────────────────────────
 - id: event_confess_nana
+  visual: "nana"
   oneTime: true
   description: "排练前，只有你们两个人到了。她在调音，你坐在旁边，忽然觉得这种沉默有点难以为继。你知道自己在想什么，也知道说出来会改变很多事——包括乐队。"
   trigger:
@@ -841,6 +845,7 @@
 
 # ─── 正式在一起 ──────────────────────────────────────────
 - id: event_relationship_nana
+  visual: "nana"
   oneTime: true
   description: "NaNa在排练后单独留下来问你：「那天之后你想好了吗，我们怎么处理这件事——乐队的事我是说，还有……我们的事。」她很少这么直接，但她现在是。"
   trigger:
@@ -1067,3 +1072,712 @@
           value: 10
       flags_add:
         - exam_second_final_done
+
+
+# ════════════════════════════════════════════════════════════
+# 主线：第一幕——入学与组队（强制触发，按顺序解锁）
+# ════════════════════════════════════════════════════════════
+
+# ─── 遇见 NaNa ───────────────────────────────────────────
+- id: event_meet_nana
+  visual: "nana"
+  oneTime: true
+  description: "排练室的门是虚掩的。你推开它，里面只有一个女生，正坐在放大器上拨弄贝斯，随手弹着一段你没听过的东西，不像练习，更像是在跟自己说话。她抬头看了你一眼——「找谁？」"
+  trigger:
+    and:
+      - type: week_check
+        min: 1
+      - type: not_flag
+        flag: nana_met
+  choices:
+    - text: "「我想组个乐队，你感兴趣吗？」"
+      result_text: "她放下了贝斯，打量了你几秒，然后说：「还挺直接的。」顿了一下，「行，我在。」"
+      effects:
+        - stat: affection
+          op: add
+          value: 12
+        - stat: band_chemistry
+          op: add
+          value: 8
+      flags_add:
+        - nana_met
+    - text: "「这里是排练室吗？我刚来，想找个地方练一练。」"
+      result_text: "「是啊，」她说，「你弹什么的？」你们聊了半小时，到最后她说：「有机会可以一起玩。」"
+      effects:
+        - stat: affection
+          op: add
+          value: 6
+        - stat: technique
+          op: add
+          value: 3
+      flags_add:
+        - nana_met
+
+# ─── 乐队正式组建 ─────────────────────────────────────────
+- id: event_form_band
+  visual: "nana"
+  oneTime: true
+  description: "经过几周的联系和试音，你们终于有了一支像样的阵容——贝斯（NaNa）、鼓手、键盘，加上你。第一次全员到齐的排练，排练室里人多了，味道也不一样了。"
+  trigger:
+    and:
+      - type: week_check
+        min: 2
+      - type: has_flag
+        flag: nana_met
+      - type: not_flag
+        flag: band_formed
+  choices:
+    - text: "认真主持，从基础排练开始"
+      result_text: "你们从节拍器一拍一拍地对起来。很慢，很枯燥，但到最后合上的那一刻，每个人都沉默了一秒。"
+      effects:
+        - stat: technique
+          op: add
+          value: 5
+        - stat: band_chemistry
+          op: add
+          value: 10
+      flags_add:
+        - band_formed
+    - text: "「别管那么多，先玩起来再说」"
+      result_text: "乱成了一团，但有一种奇怪的快乐。NaNa笑着说「这个我喜欢」。"
+      effects:
+        - stat: affection
+          op: add
+          value: 10
+        - stat: band_chemistry
+          op: add
+          value: 6
+        - stat: sanity
+          op: add
+          value: 8
+      flags_add:
+        - band_formed
+
+# ─── Kuki 出现 ────────────────────────────────────────────
+- id: event_kuki_shows_up
+  visual: "kuki"
+  oneTime: true
+  description: "排练结束后，你在走廊碰到了一个熟悉的脸——Kuki，你的老朋友。他手里提着两袋零食，说自己是「路过」，但显然在这里等了一会儿。「你们在排练？」他问，「听起来还不错。」"
+  trigger:
+    and:
+      - type: week_check
+        min: 3
+      - type: has_flag
+        flag: band_formed
+      - type: not_flag
+        flag: kuki_appeared
+  choices:
+    - text: "拉他进来，介绍给大家"
+      result_text: "他有点拘谨，但笑得很真诚。NaNa说「你朋友挺有钱的感觉」，他当没听见，把零食分给了所有人。"
+      effects:
+        - stat: sanity
+          op: add
+          value: 8
+        - stat: band_chemistry
+          op: add
+          value: 5
+      flags_add:
+        - kuki_appeared
+    - text: "「你有兴趣一起玩吗？」"
+      result_text: "他想了想说「我没有乐器」，你说「可以买」，他笑了。他最后没加入，但成了乐队固定的观众和后勤。"
+      effects:
+        - stat: intelligence
+          op: add
+          value: 3
+        - stat: money
+          op: add
+          value: 200
+      flags_add:
+        - kuki_appeared
+
+
+# ════════════════════════════════════════════════════════════
+# NaNa 人物线
+# ════════════════════════════════════════════════════════════
+
+# ─── NaNa 偷懒 ───────────────────────────────────────────
+- id: event_nana_slacking
+  visual: "nana"
+  cooldown: 8
+  description: "今天的排练，NaNa明显没有好好准备。她的部分走音了两次，被问起来只是耸耸肩说「最近状态不好」。其他成员的眼神在你和她之间飘来飘去，等你表个态。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: nana_met
+      - type: not_flag
+        flag: nana_left_band
+      - type: not_flag
+        flag: nana_truce
+      - type: week_check
+        min: 9
+      - type: probability
+        chance: 0.5
+  choices:
+    - text: "当场指出来，这不是应有的态度"
+      result_text: "她没有顶嘴，低着头把那段重弹了两遍，第二遍没出问题。排练室的气氛压了很久。"
+      effects:
+        - stat: technique
+          op: add
+          value: 4
+        - stat: band_chemistry
+          op: add
+          value: 8
+        - stat: affection
+          op: subtract
+          value: 10
+    - text: "排练后私下问她是不是有什么事"
+      result_text: "她说了些模糊的话，「就是最近脑子转不动」。你没追问，她反而有点感激地看了你一眼。"
+      effects:
+        - stat: affection
+          op: add
+          value: 8
+        - stat: band_chemistry
+          op: subtract
+          value: 5
+
+# ─── NaNa 提议写歌 ────────────────────────────────────────
+- id: event_nana_write_song
+  visual: "nana"
+  oneTime: true
+  description: "一个下午，排练室只有你们两个人。NaNa突然把贝斯竖起来，说：「我们来写一首歌吧，就现在，随便写，写什么都行。」她的眼神里有那种少见的认真。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: nana_met
+      - type: not_flag
+        flag: nana_left_band
+      - type: not_flag
+        flag: nana_write_song_done
+      - type: week_check
+        min: 10
+      - type: probability
+        chance: 0.5
+  choices:
+    - text: "「好，跟着感觉走，写什么都行」"
+      result_text: "你们花了整个下午乱弹，什么都没定下来，但有一段旋律你怎么都忘不掉。NaNa说「这才是音乐的本来面目」。"
+      effects:
+        - stat: affection
+          op: add
+          value: 15
+        - stat: artistic_integrity
+          op: add
+          value: 12
+        - stat: sanity
+          op: add
+          value: 8
+      flags_add:
+        - nana_write_song_done
+    - text: "「先定好结构，这样效率高一点」"
+      result_text: "你画了一张表，AB段分好，和弦进行写清楚。NaNa配合着，但你能感觉到她的热情在一点点冷下去。歌写完了，很完整，但不知道为什么，有点空。"
+      effects:
+        - stat: technique
+          op: add
+          value: 8
+        - stat: affection
+          op: subtract
+          value: 3
+        - stat: artistic_integrity
+          op: subtract
+          value: 3
+      flags_add:
+        - nana_write_song_done
+
+# ─── NaNa 消失三天 ───────────────────────────────────────
+- id: event_nana_vanishes
+  visual: "nana"
+  oneTime: true
+  description: "NaNa消失了三天。电话不接，消息不回，连排练她都没来。第四天她突然出现，背着包，头发被风吹乱了，说「去了趟海边，想清楚了一些事」。她没有解释更多。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: nana_met
+      - type: not_flag
+        flag: nana_left_band
+      - type: not_flag
+        flag: nana_vanish_done
+      - type: week_check
+        min: 12
+      - type: probability
+        chance: 0.6
+  choices:
+    - text: "「想清楚了什么？」"
+      result_text: "她笑笑，「一些事。」没有说清楚，但她把手机放在了桌上，推到你面前——屏幕上有一段写了一半的歌词。"
+      effects:
+        - stat: affection
+          op: add
+          value: 10
+        - stat: artistic_integrity
+          op: add
+          value: 5
+      flags_add:
+        - nana_vanish_done
+    - text: "「回来就好，接着排练吧」"
+      result_text: "她愣了一下，然后点了点头。「你不会问我去哪儿了？」「你不是回来了吗。」她沉默了一会儿，抱起贝斯。"
+      effects:
+        - stat: affection
+          op: add
+          value: 8
+        - stat: band_chemistry
+          op: add
+          value: 6
+      flags_add:
+        - nana_vanish_done
+
+# ─── NaNa 去留：好感路线（Version A）────────────────────
+- id: event_nana_decision_a
+  visual: "nana"
+  oneTime: true
+  description: "NaNa来找你，不像平时那么随意，坐下来之前停顿了一下。她说，有支外地巡演乐队邀她做专职贝斯手，合同一年，薪水不错。「我还没决定，」她说，「所以来告诉你。」她的眼神有点复杂——不像是来报喜的。"
+  trigger:
+    and:
+      - type: week_check
+        min: 20
+      - type: has_flag
+        flag: nana_met
+      - type: not_flag
+        flag: nana_left_band
+      - type: not_flag
+        flag: nana_stayed
+      - type: not_flag
+        flag: nana_decision_done
+      - type: stat_check
+        stat: affection
+        op: greater_than
+        value: 30
+  choices:
+    - text: "「去吧，这是个好机会。」"
+      result_text: "她沉默了很久。「就这样？」「就这样。」她站起来，在门口停了一下，回头说：「谢谢你认真回答我。」她走了，乐队失去了一个贝斯手，你失去了更多。"
+      effects:
+        - stat: affection
+          op: add
+          value: 12
+        - stat: band_chemistry
+          op: subtract
+          value: 20
+        - stat: sanity
+          op: subtract
+          value: 10
+      flags_add:
+        - nana_left_band
+        - nana_decision_done
+    - text: "「乐队还需要你——我也需要你。」"
+      result_text: "她停顿了很久，长到你觉得说错了。然后她开口：「你知道吗，我就想听你说这句话。」她没有去，留下来了。"
+      effects:
+        - stat: affection
+          op: add
+          value: 22
+        - stat: band_chemistry
+          op: add
+          value: 8
+        - stat: sanity
+          op: add
+          value: 10
+      flags_add:
+        - nana_stayed
+        - nana_decision_done
+
+# ─── NaNa 去留：关系破裂路线（Version B）─────────────────
+- id: event_nana_decision_b
+  visual: "nana"
+  oneTime: true
+  description: "一次排练后，大家陆续离开了，只剩你和NaNa。她背对着你收拾东西，然后突然开口：「我觉得咱们之间出了什么问题——不是音乐上的那种。」她转过来，表情很平静，但眼神很认真。"
+  trigger:
+    and:
+      - type: week_check
+        min: 20
+      - type: has_flag
+        flag: nana_met
+      - type: not_flag
+        flag: nana_left_band
+      - type: not_flag
+        flag: nana_stayed
+      - type: not_flag
+        flag: nana_decision_done
+      - type: stat_check
+        stat: band_chemistry
+        op: less_than
+        value: 20
+  choices:
+    - text: "「我也觉得。你来说说看。」"
+      result_text: "你们聊了一个多小时，没有结论，但说出来了很多之前憋着的东西。最后她说「好，从头开始」。好感度归零，但变成了另一种关系——一种更稳的。"
+      effects:
+        - stat: affection
+          op: set
+          value: 0
+        - stat: band_chemistry
+          op: add
+          value: 15
+        - stat: sanity
+          op: add
+          value: 8
+      flags_add:
+        - nana_truce
+        - nana_decision_done
+    - text: "「就是音乐观不同而已，别想太多。」"
+      result_text: "她摇了摇头，「你总是这样。」她拿起包走了。下周她告诉你，她在考虑要不要继续待在这个乐队。"
+      effects:
+        - stat: affection
+          op: subtract
+          value: 15
+        - stat: band_chemistry
+          op: subtract
+          value: 12
+        - stat: sanity
+          op: subtract
+          value: 8
+      flags_add:
+        - nana_decision_done
+
+# ─── NaNa 离开后的偶遇 ────────────────────────────────────
+- id: event_nana_encounter_after_leave
+  visual: "nana"
+  oneTime: true
+  description: "在一家你们以前常去的酒吧，你偶然看见了NaNa。她在台上演出，台下只有二十几个人，但她弹得很投入，就像什么都没有发生过一样。你在角落里坐下来，点了一杯酒，听完了全场。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: nana_left_band
+      - type: not_flag
+        flag: nana_post_leave_done
+      - type: week_check
+        min: 25
+      - type: probability
+        chance: 0.55
+  choices:
+    - text: "演出结束后去和她说话"
+      result_text: "她看到你有点意外，然后笑了。你们喝了一杯，聊了很久，什么都聊，就是没聊你们之间那件事。分开时她说：「加油。」那两个字很轻，但你走了很远都还在想。"
+      effects:
+        - stat: affection
+          op: add
+          value: 8
+        - stat: sanity
+          op: add
+          value: 12
+        - stat: artistic_integrity
+          op: add
+          value: 5
+      flags_add:
+        - nana_post_leave_done
+    - text: "静静地把酒喝完，然后离开，没打招呼"
+      result_text: "你站起来的时候她正好下台，你们对视了一秒——你低下头走了。那一秒的事，你很久都没说给任何人听。"
+      effects:
+        - stat: sanity
+          op: subtract
+          value: 5
+        - stat: artistic_integrity
+          op: add
+          value: 8
+      flags_add:
+        - nana_post_leave_done
+
+
+# ════════════════════════════════════════════════════════════
+# Kuki 人物线
+# ════════════════════════════════════════════════════════════
+
+# ─── Kuki 冲突一：钱与尊严 ───────────────────────────────
+- id: event_kuki_sponsorship
+  visual: "kuki"
+  oneTime: true
+  description: "Kuki说，他父亲愿意赞助你们乐队一笔启动资金——设备、场地费、录音棚。条件只有一个：每次演出提一下他父亲公司的名字。Kuki看着你，眼神里有些期待，因为这样他也能向父亲交代。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: kuki_appeared
+      - type: not_flag
+        flag: kuki_sponsor_done
+      - type: week_check
+        min: 8
+  choices:
+    - text: "「接受，钱是真实的，名字就一句话的事」"
+      result_text: "Kuki松了口气，笑着说「好，我跟他说」。钱到账的那天你们买了新的踏板。但有个什么东西，好像就此被定价了。"
+      effects:
+        - stat: money
+          op: add
+          value: 3000
+        - stat: artistic_integrity
+          op: subtract
+          value: 10
+        - stat: band_chemistry
+          op: add
+          value: 3
+      flags_add:
+        - kuki_sponsor_done
+        - kuki_dad_knows
+    - text: "「谢谢，但我们自己来——不想欠这种人情」"
+      result_text: "Kuki沉默了一下，说「好的」。你看到他有点失落，但他之后没再提过这件事。只是在某次排练后，他把你单独拉到一边说：「我觉得你做的是对的。」"
+      effects:
+        - stat: artistic_integrity
+          op: add
+          value: 8
+        - stat: intelligence
+          op: add
+          value: 3
+      flags_add:
+        - kuki_sponsor_done
+
+# ─── Kuki 冲突二：他开始动摇 ─────────────────────────────
+- id: event_kuki_future_talk
+  visual: "kuki"
+  oneTime: true
+  description: "Kuki发消息说想见你，见面后他喝着水，盯着桌子说，他父亲已经为他规划好了毕业后的路：回家接手公司某个部门，出国读MBA，然后按部就班往上走。「其实也还好，」他说，声音里没有什么信念。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: kuki_appeared
+      - type: not_flag
+        flag: kuki_future_done
+      - type: week_check
+        min: 15
+  choices:
+    - text: "「你自己想怎样？」"
+      result_text: "他愣了一下，好像这个问题没有人问过他。「我……」他没有说完，但那个停顿比任何答案都长。"
+      effects:
+        - stat: intelligence
+          op: add
+          value: 3
+        - stat: sanity
+          op: add
+          value: 5
+      flags_add:
+        - kuki_future_done
+        - kuki_questioned_future
+    - text: "「听起来挺稳的，有什么不好的」"
+      result_text: "他笑了笑说「是啊」，话题就结束了。之后他变得有点疏远，消息也回得少了。"
+      effects:
+        - stat: sanity
+          op: subtract
+          value: 3
+      flags_add:
+        - kuki_future_done
+
+# ─── Kuki 冲突三：家族最后通牒 ────────────────────────────
+- id: event_kuki_ultimatum
+  visual: "kuki"
+  oneTime: true
+  description: "Kuki告诉你，他父亲发现了他把时间花在乐队上，打了一个很长的电话。他说他可能需要「暂停一段时间」，但语气里听不出他到底什么意思——是真的暂停，还是告别。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: kuki_questioned_future
+      - type: not_flag
+        flag: kuki_ultimatum_done
+      - type: week_check
+        min: 22
+  choices:
+    - text: "「不管你做什么决定，我都支持你。」"
+      result_text: "他沉默了很久。「谢谢你，真的。」那句话说得很认真，认真到你们都没再说话。分开时他拍了拍你的肩膀。"
+      effects:
+        - stat: sanity
+          op: add
+          value: 8
+        - stat: intelligence
+          op: add
+          value: 3
+      flags_add:
+        - kuki_ultimatum_done
+        - kuki_friend_to_end
+    - text: "「乐队现在需要你，你不能就这样消失。」"
+      result_text: "他皱了皱眉说「我知道」，然后换了话题。你感觉到他在后退，而你的话把他推得更远了一点。"
+      effects:
+        - stat: band_chemistry
+          op: subtract
+          value: 5
+        - stat: sanity
+          op: subtract
+          value: 5
+      flags_add:
+        - kuki_ultimatum_done
+
+
+# ════════════════════════════════════════════════════════════
+# 阿特（前辈）人物线
+# ════════════════════════════════════════════════════════════
+
+# ─── 偶遇阿特 ─────────────────────────────────────────────
+- id: event_aite_encounter
+  visual: "aite"
+  oneTime: true
+  description: "在一家老牌 live house，演出结束后你在吧台旁遇到一个人——看起来比你大几岁，一个人喝着白开水，眼神平静地扫着台上的收场工作。有人告诉你他叫阿特，是555乐队的队长。"
+  trigger:
+    and:
+      - type: not_flag
+        flag: aite_met
+      - type: week_check
+        min: 9
+      - type: has_flag
+        flag: played_first_gig
+      - type: probability
+        chance: 0.4
+  choices:
+    - text: "过去搭话，聊聊音乐"
+      result_text: "你们聊了差不多二十分钟。他问你弹什么风格，你说了，他点点头，没有评价。临走前他说：「多练。不是因为要成名，是因为不练会生锈。」"
+      effects:
+        - stat: technique
+          op: add
+          value: 4
+        - stat: artistic_integrity
+          op: add
+          value: 5
+      flags_add:
+        - aite_met
+        - aite_approved
+    - text: "「请你喝一杯？」"
+      result_text: "他看了一眼你手里的饮料，说「不用，我喝水」。你一时不知道怎么接，他也没有主动继续说话，气氛就这样结束了。"
+      effects:
+        - stat: charm
+          op: subtract
+          value: 3
+      flags_add:
+        - aite_met
+
+# ─── 阿特邀请演出 ─────────────────────────────────────────
+- id: event_aite_gig_offer
+  visual: "aite"
+  oneTime: true
+  description: "阿特联系你说，他的乐队下个月有一场演出，前面有个暖场档空了出来，问你们有没有兴趣。「场子不大，三四百人，」他说，「但是真正听音乐的那种观众。」"
+  trigger:
+    and:
+      - type: has_flag
+        flag: aite_met
+      - type: not_flag
+        flag: aite_gig_done
+      - type: week_check
+        min: 15
+      - type: probability
+        chance: 0.45
+  choices:
+    - text: "婉拒，我们还没准备好"
+      result_text: "阿特说「好」，没有再说什么。但他记住了你的态度。"
+      effects:
+        - stat: technique
+          op: add
+          value: 5
+        - stat: sanity
+          op: add
+          value: 4
+      flags_add:
+        - aite_gig_done
+    - text: "接受，认真对待这次机会"
+      skill_check:
+        stat: technique
+        difficulty: 50
+      success_text: "你们没有出大问题，甚至有几个时刻是真的好。演出结束，阿特在后台站着，对你点了点头——他不是那种会随便鼓掌的人。"
+      success_effects:
+        - stat: fame
+          op: add
+          value: 15
+        - stat: technique
+          op: add
+          value: 5
+        - stat: band_chemistry
+          op: add
+          value: 10
+      fail_text: "出了几个低级错误。阿特没有说什么，但从他的表情你知道，你们把那个机会弄砸了。他之后很久没有联系你。"
+      fail_effects:
+        - stat: fame
+          op: subtract
+          value: 5
+        - stat: band_chemistry
+          op: subtract
+          value: 8
+        - stat: sanity
+          op: subtract
+          value: 10
+      effects: []
+      flags_add:
+        - aite_gig_done
+
+# ─── 阿特的私下建议 ──────────────────────────────────────
+- id: event_aite_advice
+  visual: "aite"
+  oneTime: true
+  description: "阿特把你单独叫到一边。「你有天赋，」他直接说，不是夸奖的语气，更像是一个事实陈述。「但我不确定你自己知道这件事。」他停了一下，「你到底为什么玩音乐？」"
+  trigger:
+    and:
+      - type: has_flag
+        flag: aite_met
+      - type: has_flag
+        flag: aite_approved
+      - type: not_flag
+        flag: aite_advice_given
+      - type: week_check
+        min: 20
+      - type: probability
+        chance: 0.4
+  choices:
+    - text: "「为了自己——为了那种弹出对的东西时的感觉」"
+      result_text: "他看了你很久，然后说「好」。就一个字，但你感觉他是认真在评价你的回答。"
+      effects:
+        - stat: artistic_integrity
+          op: add
+          value: 15
+        - stat: sanity
+          op: add
+          value: 8
+      flags_add:
+        - aite_advice_given
+        - purpose_for_self
+    - text: "「为了让更多人听到这种音乐」"
+      result_text: "他沉默了一下。「那你就必须让自己的音乐值得被更多人听到。」你不确定他算不算认可这个答案，但那句话留下来了。"
+      effects:
+        - stat: fame
+          op: add
+          value: 5
+        - stat: artistic_integrity
+          op: add
+          value: 8
+      flags_add:
+        - aite_advice_given
+        - purpose_for_audience
+
+# ─── 跳槽到阿特乐队 ──────────────────────────────────────
+- id: event_aite_join_offer
+  visual: "aite"
+  oneTime: true
+  description: "阿特问你，有没有考虑过换一个环境。「我们乐队下半年需要一个位置，」他说，「你的技术可以，而且我觉得你能适应我们的东西。」他没有催你，但那句话摆在那里了。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: aite_advice_given
+      - type: not_flag
+        flag: nana_stayed
+      - type: not_flag
+        flag: jumped_to_art_band
+      - type: stat_check
+        stat: technique
+        op: greater_than
+        value: 65
+      - type: stat_check
+        stat: band_chemistry
+        op: less_than
+        value: 20
+      - type: probability
+        chance: 0.5
+  choices:
+    - text: "「我愿意考虑。」"
+      result_text: "你当晚睡前想了很久。第二天你告诉了乐队，没有人大吵，但排练室里的空气变了。你离开了你们的乐队，加入了阿特的。"
+      effects:
+        - stat: technique
+          op: add
+          value: 10
+        - stat: band_chemistry
+          op: subtract
+          value: 30
+        - stat: artistic_integrity
+          op: add
+          value: 5
+        - stat: sanity
+          op: subtract
+          value: 8
+      flags_add:
+        - jumped_to_art_band
+    - text: "「谢谢，但我还是想做自己的乐队。」"
+      result_text: "他点点头，「那就把你自己的乐队做好。」你回去之后把排练时间加了一倍。"
+      effects:
+        - stat: artistic_integrity
+          op: add
+          value: 10
+        - stat: technique
+          op: add
+          value: 5

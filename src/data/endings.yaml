@@ -1,5 +1,6 @@
 # ============================================================
 # 游戏结局库 (endings.yaml)
+# 检查顺序即优先级——越靠前越先判断
 # ============================================================
 
 # ─── 强制危机结局（优先检查）────────────────────────────────
@@ -39,7 +40,7 @@
       - type: week_check
         min: 4
 
-# ─── 早期结局 ────────────────────────────────────────────────
+# ─── 早期淘汰结局 ────────────────────────────────────────
 
 - id: ending_gave_up
   title: "放弃了"
@@ -58,7 +59,7 @@
         op: less_than
         value: 150
 
-# ─── 中期结局 ────────────────────────────────────────────────
+# ─── 中途出局结局 ────────────────────────────────────────
 
 - id: ending_burnout
   title: "燃尽"
@@ -92,7 +93,149 @@
         op: greater_than
         value: 80000
 
-# ─── 终局（游戏第四年，约22岁）────────────────────────────────
+# ─── 隐藏结局：转投阿特门下 ─────────────────────────────
+
+- id: ending_jazz_path
+  title: "不一样的路"
+  description: "你离开了自己的乐队，加入了阿特的世界。爵士的语法和你原来学的不一样，你花了很长时间去适应，但某一天突然贯通了——那种感觉，比你想象中更好。"
+  epilogue: "你成了一个真正的爵士乐手。偶尔有人问起你以前的乐队，你会笑笑说「那是另一段故事了」。那个自己组建乐队的梦想没有消失，只是被放在了一个安静的地方。"
+  trigger:
+    and:
+      - type: has_flag
+        flag: jumped_to_art_band
+      - type: stat_check
+        stat: technique
+        op: greater_than
+        value: 75
+      - type: stat_check
+        stat: artistic_integrity
+        op: greater_than
+        value: 70
+
+# ─── 终局（约22岁）─────────────────────────────────────────
+
+- id: ending_26_club
+  title: "永远二十二"
+  description: "你留下了一张没有人能超越的专辑，和一段没有续集的故事。你和NaNa之间的那些事——地下室、楼顶、凌晨的对弹——只有你们两个人知道。你的才华燃烧得太过耀眼，耀眼到把你自己也点燃了。"
+  epilogue: "你永远停留在了二十二岁。遗物里有一本写了一半的歌词本，最后一页写着她的名字。"
+  trigger:
+    and:
+      - type: age_check
+        is: 22
+      - type: has_flag
+        flag: in_relationship
+      - type: stat_check
+        stat: sanity
+        op: less_than
+        value: 10
+      - type: stat_check
+        stat: health
+        op: less_than
+        value: 10
+      - type: stat_check
+        stat: technique
+        op: greater_than
+        value: 85
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 75
+      - type: stat_check
+        stat: artistic_integrity
+        op: greater_than
+        value: 75
+
+- id: ending_star_band
+  title: "明星乐团"
+  description: "你们五个人站在大舞台上，灯光打下来。NaNa在你左边，调了个低音，回头朝你笑了一下。那一刻什么都值了——不是名声，不是钱，就是这个画面本身。"
+  epilogue: "你们的第二张专辑发行时，售出了十万张。乐评人写道：「这支乐队让人相信摇滚还有未来。」"
+  trigger:
+    and:
+      - type: age_check
+        is: 22
+      - type: has_flag
+        flag: nana_stayed
+      - type: stat_check
+        stat: technique
+        op: greater_than
+        value: 78
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 75
+      - type: stat_check
+        stat: band_chemistry
+        op: greater_than
+        value: 70
+      - type: stat_check
+        stat: charm
+        op: greater_than
+        value: 55
+
+- id: ending_guitar_hero
+  title: "孤独的天才"
+  description: "你的名字出现在了杂志封面上。采访里他们问你，成功最重要的秘诀是什么。你停顿了很久，说：「什么都不放在音乐前面。」那个回答是真的，但说出来之后，排练室里只剩你一个人的画面，突然变得很清晰。"
+  epilogue: "你的solo专辑获得了年度最佳。庆功宴上你喝多了，给一个没有存在手机里的号码发了条消息，然后删掉了。"
+  trigger:
+    and:
+      - type: age_check
+        is: 22
+      - type: stat_check
+        stat: technique
+        op: greater_than
+        value: 82
+      - type: stat_check
+        stat: fame
+        op: greater_than
+        value: 70
+      - type: stat_check
+        stat: band_chemistry
+        op: less_than
+        value: 30
+      - type: not_flag
+        flag: in_relationship
+
+- id: ending_back_to_normal
+  title: "回归"
+  description: "你把吉他放进了衣柜。不是因为放弃了，而是因为你有了别的东西——一种每天早上起来就在旁边的东西，比任何演出都让你踏实。NaNa说你弦还没调准，你说不急。"
+  epilogue: "你和NaNa住在一起，在一个租金便宜的城市。她偶尔还接演出，你给她拍照。有时候你们一起对弹，没有观众，不录下来，弹完就算了。"
+  trigger:
+    and:
+      - type: age_check
+        is: 22
+      - type: has_flag
+        flag: in_relationship
+      - type: stat_check
+        stat: fame
+        op: less_than
+        value: 40
+      - type: stat_check
+        stat: technique
+        op: less_than
+        value: 60
+
+- id: ending_tech_career
+  title: "另一种成功"
+  description: "你和Kuki在一间白色的小办公室里谈了三个小时，他负责技术，你负责你懂的那部分——音乐、人、感觉。你们决定一起做一件事，和乐队有关，但不完全是乐队。"
+  epilogue: "你们的音乐科技公司在第三年开始盈利。Kuki向你展示数据时，你说了一句他后来反复提起的话：「我们做的东西，应该让更多人能开始玩音乐。」"
+  trigger:
+    and:
+      - type: age_check
+        is: 22
+      - type: has_flag
+        flag: kuki_friend_to_end
+      - type: stat_check
+        stat: intelligence
+        op: greater_than
+        value: 58
+      - type: stat_check
+        stat: charm
+        op: greater_than
+        value: 52
+      - type: stat_check
+        stat: technique
+        op: less_than
+        value: 68
 
 - id: ending_rock_legend
   title: "摇滚传奇"
@@ -114,31 +257,6 @@
         stat: health
         op: greater_than
         value: 30
-
-- id: ending_27_club
-  title: "永远二十二"
-  description: "你的才华燃烧得太过耀眼，耀眼到把你自己也点燃了。他们说天才总是活得短暂——你不知道这是安慰还是诅咒。你的最后一张专辑在你离开后卖了一百万张。"
-  epilogue: "你永远停留在了二十二岁。遗物里有一本写了一半的歌词本。"
-  trigger:
-    and:
-      - type: age_check
-        is: 22
-      - type: stat_check
-        stat: sanity
-        op: less_than
-        value: 10
-      - type: stat_check
-        stat: health
-        op: less_than
-        value: 10
-      - type: stat_check
-        stat: technique
-        op: greater_than
-        value: 88
-      - type: stat_check
-        stat: fame
-        op: greater_than
-        value: 78
 
 - id: ending_indie_legend
   title: "独立传奇"
@@ -183,9 +301,9 @@
         flag: signed_major_label
 
 - id: ending_washed_up
-  title: "过气乐手"
-  description: "二十二岁，你还在。但那种在台上感受到的电流感，已经消失很久了。你在家乡的酒吧里翻唱着别人的老歌，偶尔有人说「你以前好像挺厉害的」。"
-  epilogue: "你微笑着说「还好」，转身点了一杯酒。"
+  title: "还在"
+  description: "二十二岁，你还在。那种在台上感受到的电流感，已经很久没有了，但你还在。这件事本身，好像也算一种答案。"
+  epilogue: "你在一家小酒吧里做驻场，每周三次，客人不多，但固定。有时候有人会在结束后过来说「弹得不错」，你说谢谢，转身把设备收好。"
   trigger:
     and:
       - type: age_check

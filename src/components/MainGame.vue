@@ -109,8 +109,24 @@
 
       <!-- ── EVENT phase ── -->
       <template v-else-if="state.phase === 'event' && state.currentEvent">
-        <p class="vn-event-text">{{ state.currentEvent.description }}</p>
-        <p v-if="state.currentEvent.narrative" class="vn-event-narrative">{{ state.currentEvent.narrative }}</p>
+        <div class="event-body" :class="{ 'event-body--has-portrait': !!state.currentEvent.visual }">
+          <div class="event-text-col">
+            <p class="vn-event-text">{{ state.currentEvent.description }}</p>
+            <p v-if="state.currentEvent.narrative" class="vn-event-narrative">{{ state.currentEvent.narrative }}</p>
+          </div>
+          <!-- Character portrait: placeholder until real art is ready -->
+          <div
+            v-if="state.currentEvent.visual"
+            class="character-portrait"
+            :class="`portrait--${state.currentEvent.visual}`"
+          >
+            <div class="portrait-art">
+              <!-- 立绘插槽：将来替换为 <img :src="portraitSrc(event.visual)" /> -->
+              <span class="portrait-placeholder-icon">{{ portraitIcon(state.currentEvent.visual) }}</span>
+            </div>
+            <span class="portrait-name">{{ portraitName(state.currentEvent.visual) }}</span>
+          </div>
+        </div>
         <div class="vn-choices">
           <button
             v-for="(choice, i) in availableChoices"
@@ -417,6 +433,15 @@ function skillCheckOdds(stat: string, difficulty: number): string {
   return `${pct}%`;
 }
 
+const PORTRAIT_META: Record<string, { name: string; icon: string }> = {
+  nana:   { name: 'NaNa',  icon: '🎸' },
+  kuki:   { name: 'Kuki',  icon: '💻' },
+  aite:   { name: '阿特',  icon: '🎷' },
+  player: { name: '???',   icon: '🎵' },
+};
+function portraitName(id: string): string { return PORTRAIT_META[id]?.name ?? id; }
+function portraitIcon(id: string): string { return PORTRAIT_META[id]?.icon ?? '👤'; }
+
 onMounted(() => syncState());
 </script>
 
@@ -670,6 +695,70 @@ onMounted(() => syncState());
 
 .vn-choice-btn.has-skill-check {
   border-color: rgba(255, 213, 79, 0.35);
+}
+
+/* ── Character portrait ── */
+.event-body {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.event-text-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.character-portrait {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 72px;
+}
+
+.portrait-art {
+  width: 72px;
+  height: 108px;
+  border-radius: 0.5rem;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  /* 将来替换为真实立绘时移除 background/border/font-size，加 overflow:hidden */
+  transition: border-color 0.2s;
+}
+
+/* Per-character accent colours */
+.portrait--nana .portrait-art {
+  border-color: rgba(255, 107, 157, 0.45);
+  background: rgba(255, 107, 157, 0.06);
+}
+.portrait--kuki .portrait-art {
+  border-color: rgba(79, 195, 247, 0.45);
+  background: rgba(79, 195, 247, 0.06);
+}
+.portrait--aite .portrait-art {
+  border-color: rgba(255, 213, 79, 0.45);
+  background: rgba(255, 213, 79, 0.06);
+}
+
+.portrait-name {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.05em;
+}
+
+/* hide portrait on very narrow screens to keep choices readable */
+@media (max-width: 360px) {
+  .character-portrait { display: none; }
+  .event-body { display: block; }
 }
 
 /* ── Summary ── */
