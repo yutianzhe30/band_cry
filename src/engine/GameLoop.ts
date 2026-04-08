@@ -18,8 +18,8 @@ const SAVE_INDEX_KEY = 'band_cry_save_index';
 const SAVE_KEY = (slot: string) => `band_cry_save_${slot}`;
 
 const START_AGE = 18;
-const ACTION_POINTS_PER_WEEK = 4;
-const WEEKLY_LIVING_COST = 80;
+const ACTION_POINTS_PER_TURN = 4;
+const LIVING_COST_PER_TURN = 320; // ~80/week × 4 weeks
 
 export class GameLoop {
   public gameState: GameState;
@@ -56,9 +56,10 @@ export class GameLoop {
     return {
       player,
       currentDate: new Date(startYear, 6, 1), // July 1st of start year
-      actionPoints: ACTION_POINTS_PER_WEEK,
+      actionPoints: ACTION_POINTS_PER_TURN,
       week: 1,
       firedEventIds: new Set<string>(),
+      eventLastFired: new Map<string, number>(),
       log: [],
       bandMembers: [],
     };
@@ -87,61 +88,79 @@ export class GameLoop {
     return logText;
   }
 
-  /** End the current week. Returns triggered event, ending, or summary. */
+  /** End the current turn (≈ 1 month). Returns triggered event, ending, or summary. */
   public endTurn(): { event: GameEvent | null; ending: GameEnding | null; summary: string[] } {
     const summary: string[] = [];
 
-    // 1. Weekly living cost
+    // 1. Monthly living cost
     const money = this.gameState.player.stats.get('money') ?? 0;
-    const cost = Math.min(money, WEEKLY_LIVING_COST);
-    this.gameState.player.stats.set('money', Math.max(0, money - WEEKLY_LIVING_COST));
-    if (cost > 0) summary.push(`支付了 ¥${cost} 生活费`);
-    if (money < WEEKLY_LIVING_COST) summary.push(`⚠ 钱不够了，生活捉襟见肘`);
+    const cost = Math.min(money, LIVING_COST_PER_TURN);
+    this.gameState.player.stats.set('money', Math.max(0, money - LIVING_COST_PER_TURN));
+    if (cost > 0) summary.push(`支付了 ¥${cost} 本月生活费`);
+    if (money < LIVING_COST_PER_TURN) summary.push(`⚠ 钱不够了，生活捉襟见肘`);
 
-    // 2. Passive stat decay
-    this.nudgeStat('health', -1);
-    this.nudgeStat('sanity', -1);
+    // 2. Passive stat decay (~4 weeks of wear)
+    this.nudgeStat('health', -4);
+    this.nudgeStat('sanity', -4);
 
     const health = this.gameState.player.stats.get('health') ?? 0;
     const sanity = this.gameState.player.stats.get('sanity') ?? 0;
     if (health < 20) summary.push(`⚠ 身体状态很差，注意休息`);
     if (sanity < 20) summary.push(`⚠ 精神状态濒临崩溃`);
 
-    // 3. Advance time by one week
+    // 3. Advance time by one month
     const next = new Date(this.gameState.currentDate.getTime());
-    next.setDate(next.getDate() + 7);
+    next.setDate(next.getDate() + 30);
     this.gameState.currentDate = next;
     this.gameState.week++;
 
     // 4. Replenish action points
-    this.gameState.actionPoints = ACTION_POINTS_PER_WEEK;
+    this.gameState.actionPoints = ACTION_POINTS_PER_TURN;
 
-    // 5. Check for triggered events
-    const triggeredEvent = this.eventManager.checkForTriggeredEvents(this.gameState, this.getAge());
-    if (triggeredEvent) {
-      if (triggeredEvent.oneTime) {
-        this.gameState.firedEventIds.add(triggeredEvent.id);
-      }
-      return { event: triggeredEvent, ending: null, summary };
-    }
-
-    // 6. Check for endings
+    // 5. Check endings FIRST (critical stat=0 endings must not be masked by events)
     const triggeredEnding = this.endingManager.checkEndings(this.gameState, this.getAge());
     if (triggeredEnding) {
       this.addLog(`【结局】${triggeredEnding.title}`);
       return { event: null, ending: triggeredEnding, summary };
     }
 
+    // 6. Check for triggered events
+    const triggeredEvent = this.eventManager.checkForTriggeredEvents(this.gameState, this.getAge());
+    if (triggeredEvent) {
+      if (triggeredEvent.oneTime) {
+        this.gameState.firedEventIds.add(triggeredEvent.id);
+      }
+      this.gameState.eventLastFired.set(triggeredEvent.id, this.gameState.week);
+      return { event: triggeredEvent, ending: null, summary };
+    }
+
     return { event: null, ending: null, summary };
   }
 
-  /** Apply an event choice's effects and flags. */
-  public applyEventChoice(choice: EventChoice): void {
+  /**
+   * Apply an event choice's effects and flags.
+   * Returns the result text to display (success, fail, or plain result_text).
+   * successChance = clamp(statValue / (difficulty * 2), 0.10, 0.90)
+   * → stat == difficulty gives 50%; stat == 2×difficulty gives 90%.
+   */
+  public applyEventChoice(choice: EventChoice): string | null {
+    let resultText: string | null = choice.result_text ?? null;
+
+    if (choice.skill_check) {
+      const statVal = this.gameState.player.stats.get(choice.skill_check.stat) ?? 0;
+      const successChance = Math.min(0.90, Math.max(0.10, statVal / (choice.skill_check.difficulty * 2)));
+      const success = Math.random() < successChance;
+      this.applyEffects(success ? (choice.success_effects ?? []) : (choice.fail_effects ?? []));
+      resultText = success ? (choice.success_text ?? null) : (choice.fail_text ?? null);
+    }
+
+    // Guaranteed effects (applied regardless of skill check outcome)
     this.applyEffects(choice.effects);
     if (choice.flags_add) choice.flags_add.forEach(f => this.gameState.player.flags.add(f));
     if (choice.flags_remove) choice.flags_remove.forEach(f => this.gameState.player.flags.delete(f));
     this.addLog(`选择了：${choice.text}`);
-    if (choice.result_text) this.addLog(choice.result_text);
+    if (resultText) this.addLog(resultText);
+    return resultText;
   }
 
   public applyEffects(effects: Effect[]): void {
@@ -190,6 +209,7 @@ export class GameLoop {
         actionPoints: this.gameState.actionPoints,
         week: this.gameState.week,
         firedEventIds: Array.from(this.gameState.firedEventIds),
+        eventLastFired: Object.fromEntries(this.gameState.eventLastFired),
         log: this.gameState.log,
         bandMembers: this.gameState.bandMembers,
       },
@@ -249,6 +269,7 @@ export class GameLoop {
         actionPoints: gs.actionPoints,
         week: gs.week,
         firedEventIds: new Set<string>(gs.firedEventIds),
+        eventLastFired: new Map<string, number>(Object.entries(gs.eventLastFired ?? {}) as [string, number][]),
         log: gs.log,
         bandMembers: gs.bandMembers ?? [],
       };

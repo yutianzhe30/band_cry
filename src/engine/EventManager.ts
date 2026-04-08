@@ -28,12 +28,17 @@ export class EventManager {
   /**
    * Shuffle through all events and return the first one whose trigger evaluates to true.
    * One-time events that have already fired are skipped.
+   * Events with a cooldown won't fire until that many turns have elapsed since last firing.
    */
   public checkForTriggeredEvents(gameState: GameState, age: number): GameEvent | null {
     const shuffled = [...this.allEvents].sort(() => Math.random() - 0.5);
 
     for (const event of shuffled) {
       if (event.oneTime && gameState.firedEventIds.has(event.id)) continue;
+      if (event.cooldown) {
+        const lastFired = gameState.eventLastFired.get(event.id) ?? -Infinity;
+        if (gameState.week - lastFired < event.cooldown) continue;
+      }
       if (evaluateTrigger(event.trigger, gameState, age)) {
         return event;
       }

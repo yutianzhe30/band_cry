@@ -33,6 +33,7 @@ export interface GameState {
   actionPoints: number;
   week: number;
   firedEventIds: Set<string>;
+  eventLastFired: Map<string, number>; // eventId → turn number when last fired
   log: LogEntry[];
   bandMembers: BandMember[];
 }
@@ -67,13 +68,23 @@ export interface Trigger {
   probability?: number;
 }
 
+export interface SkillCheck {
+  stat: string;       // which stat to roll against
+  difficulty: number; // stat value that gives ~50% success rate
+}
+
 export interface EventChoice {
   text: string;
   requirements?: Requirement[];
-  effects: Effect[];
+  effects: Effect[];            // guaranteed effects (applied regardless of skill check outcome)
   flags_add?: string[];
   flags_remove?: string[];
-  result_text?: string;
+  result_text?: string;         // for choices without a skill check
+  skill_check?: SkillCheck;
+  success_text?: string;
+  success_effects?: Effect[];
+  fail_text?: string;
+  fail_effects?: Effect[];
 }
 
 export interface GameEvent {
@@ -84,6 +95,7 @@ export interface GameEvent {
   choices: EventChoice[];
   visual?: string;
   oneTime?: boolean;
+  cooldown?: number; // minimum turns between firings
 }
 
 export interface GameEnding {

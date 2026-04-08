@@ -82,10 +82,17 @@
           <span class="stat-chip-icon">¥</span>
           <span class="stat-chip-val">{{ Math.round(state.stats['money'] ?? 0) }}</span>
         </span>
-        <span v-if="hasMetLoveInterest" class="stat-chip love-chip">
-          <span class="stat-chip-icon">💕</span>
-          <span class="stat-chip-val">{{ Math.round(state.stats['affection'] ?? 0) }}</span>
-        </span>
+        <!-- Debug overlay: hidden stats visible only in debug mode -->
+        <template v-if="isDebugMode">
+          <span class="stat-chip debug-chip">
+            <span class="stat-chip-icon">🎵</span>
+            <span class="stat-chip-val">{{ Math.round(state.stats['band_chemistry'] ?? 0) }}</span>
+          </span>
+          <span class="stat-chip debug-chip">
+            <span class="stat-chip-icon">💕</span>
+            <span class="stat-chip-val">{{ Math.round(state.stats['affection'] ?? 0) }}</span>
+          </span>
+        </template>
       </div>
 
       <!-- ── ACTION phase ── -->
@@ -109,17 +116,22 @@
             v-for="(choice, i) in availableChoices"
             :key="i"
             class="vn-choice-btn"
+            :class="{ 'has-skill-check': !!choice.skill_check }"
             @click="onChooseEvent(choice)"
           >
             <span class="choice-arrow">▸</span>
             {{ choice.text }}
+            <span v-if="choice.skill_check" class="skill-check-tag">
+              {{ skillCheckLabel(choice.skill_check.stat) }} 检定
+              ({{ skillCheckOdds(choice.skill_check.stat, choice.skill_check.difficulty) }})
+            </span>
           </button>
         </div>
       </template>
 
       <!-- ── SUMMARY phase ── -->
       <template v-else-if="state.phase === 'summary'">
-        <p class="vn-summary-title">── 本周结算 ──</p>
+        <p class="vn-summary-title">── 本月结算 ──</p>
         <div class="vn-summary-lines">
           <p v-for="(line, i) in state.weekSummary" :key="i" class="vn-summary-line">{{ line }}</p>
         </div>
@@ -233,9 +245,6 @@ const availableChoices = computed(() => {
   );
 });
 
-const hasMetLoveInterest = computed(() =>
-  gameLoop.gameState.player.flags.has('nana_romance_path')
-);
 
 const formattedDate = computed(() => {
   const d = state.currentDate;
@@ -250,7 +259,7 @@ const currentScene = computed(() => {
 
 const bgStyle = computed(() => ({ backgroundImage: `url(${probeRoomBg})` }));
 
-// Mini stat strip: show key stats except money and affection (handled separately)
+// Mini stat strip: visible stats only (band_chemistry and affection are hidden)
 interface MiniStat { id: string; icon: string; value: number }
 const MINI_STAT_CONFIG: { id: string; icon: string }[] = [
   { id: 'technique',         icon: '🎸' },
@@ -259,9 +268,11 @@ const MINI_STAT_CONFIG: { id: string; icon: string }[] = [
   { id: 'sanity',            icon: '💜' },
   { id: 'health',            icon: '❤️' },
   { id: 'fame',              icon: '⭐' },
-  { id: 'band_chemistry',    icon: '🎵' },
   { id: 'artistic_integrity',icon: '🎨' },
 ];
+
+// Debug mode: ?debug=1 in URL shows hidden stats
+const isDebugMode = new URLSearchParams(window.location.search).get('debug') === '1';
 
 const miniStats = computed<MiniStat[]>(() =>
   MINI_STAT_CONFIG.map(c => ({ id: c.id, icon: c.icon, value: state.stats[c.id] ?? 0 }))
@@ -368,12 +379,12 @@ function dismissSummary() {
 }
 
 function onChooseEvent(choice: EventChoice) {
-  gameLoop.applyEventChoice(choice);
+  const resultText = gameLoop.applyEventChoice(choice);
   syncState();
   state.currentEvent = null;
 
-  if (choice.result_text) {
-    state.weekSummary = [choice.result_text];
+  if (resultText) {
+    state.weekSummary = [resultText];
     state.phase = 'summary';
     pendingEvent = null;
     pendingEnding = null;
@@ -388,6 +399,22 @@ function onChooseEvent(choice: EventChoice) {
       state.phase = 'action';
     }
   }
+}
+
+const STAT_LABELS: Record<string, string> = {
+  technique: '技术', band_chemistry: '默契', health: '健康',
+  charm: '魅力', sanity: '精神', artistic_integrity: '艺术坚持',
+  fame: '名声', intelligence: '智力',
+};
+
+function skillCheckLabel(stat: string): string {
+  return STAT_LABELS[stat] ?? stat;
+}
+
+function skillCheckOdds(stat: string, difficulty: number): string {
+  const val = state.stats[stat] ?? 0;
+  const pct = Math.round(Math.min(90, Math.max(10, (val / (difficulty * 2)) * 100)));
+  return `${pct}%`;
 }
 
 onMounted(() => syncState());
@@ -554,8 +581,8 @@ onMounted(() => syncState());
 .money-chip { border-color: rgba(255, 210, 0, 0.3); }
 .money-chip .stat-chip-val { color: #ffd200; font-weight: 600; }
 
-.love-chip { border-color: rgba(255, 100, 150, 0.35); }
-.love-chip .stat-chip-val { color: #ff80a8; }
+.debug-chip { border-color: rgba(255, 165, 0, 0.4); border-style: dashed; }
+.debug-chip .stat-chip-val { color: #ffb347; }
 
 /* ── Flavor text (action phase) ── */
 .vn-narrative {
@@ -616,10 +643,33 @@ onMounted(() => syncState());
   transform: translateX(3px);
 }
 
+.vn-choice-btn:active {
+  transform: scale(0.97) translateX(1px);
+  background: rgba(224, 64, 251, 0.28);
+  border-color: rgba(224, 64, 251, 0.8);
+  transition: transform 0.05s, background 0.05s;
+}
+
 .choice-arrow {
   color: #e040fb;
   font-size: 0.78rem;
   flex-shrink: 0;
+}
+
+.skill-check-tag {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: #ffd54f;
+  background: rgba(255, 213, 79, 0.12);
+  border: 1px solid rgba(255, 213, 79, 0.3);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.4rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.vn-choice-btn.has-skill-check {
+  border-color: rgba(255, 213, 79, 0.35);
 }
 
 /* ── Summary ── */

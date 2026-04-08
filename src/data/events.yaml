@@ -17,34 +17,50 @@
       - type: probability
         chance: 0.6
   choices:
-    - text: "紧张地登台演出"
-      result_text: "你们颤抖着上了台，但第一个和弦响起时，什么都消失了——只剩下音乐。"
-      effects:
+    - text: "紧张地上台——就算出丑也没关系"
+      skill_check:
+        stat: technique
+        difficulty: 25
+      success_text: "第一个和弦响起，紧张消失了。结束时台下稀稀落落的掌声，对你们来说像是整个世界。"
+      success_effects:
         - stat: fame
           op: add
-          value: 8
-        - stat: sanity
-          op: subtract
-          value: 5
+          value: 12
         - stat: band_chemistry
           op: add
+          value: 15
+        - stat: sanity
+          op: subtract
+          value: 3
+      fail_text: "一开始就走调了。有人低声笑，队友的眼神让你觉得无地自容。但你们撑完了整场。"
+      fail_effects:
+        - stat: fame
+          op: subtract
+          value: 3
+        - stat: band_chemistry
+          op: add
+          value: 5
+        - stat: sanity
+          op: subtract
           value: 10
+      effects: []
       flags_add:
         - played_first_gig
-    - text: "感谢邀请，但我们还没准备好"
-      result_text: "再磨练磨练也许是对的……但那个舞台就这样错过了。"
+    - text: "婉拒，先把基本功练扎实"
+      result_text: "你挂掉电话，心情很复杂。但你打开了乐谱，练到深夜。"
       effects:
         - stat: technique
           op: add
-          value: 5
+          value: 8
         - stat: sanity
           op: add
-          value: 3
+          value: 4
       flags_add:
         - played_first_gig
 
 # ─── 吉他弦断 ────────────────────────────────────────────────
 - id: event_guitar_string_breaks
+  cooldown: 10
   description: "演出进行到一半，你的吉他弦突然断了！台下的窃笑声越来越大。"
   trigger:
     and:
@@ -59,30 +75,43 @@
       - type: probability
         chance: 0.35
   choices:
-    - text: "硬着头皮演下去，假装什么都没发生"
-      result_text: "观众看出来了，但你的镇定反而赢得了一些尊重。"
+    - text: "硬着头皮演下去，向观众致歉"
+      result_text: "观众理解地点了点头，演出继续。有人甚至觉得这份真诚很可爱。"
       effects:
         - stat: fame
           op: subtract
-          value: 5
-        - stat: sanity
-          op: add
-          value: 5
-    - text: "尝试用断弦即兴 Solo 掩盖"
-      result_text: "你的指法在颤抖，但那段混乱的Solo意外地有一种raw的美感。"
-      effects:
-        - stat: fame
-          op: add
-          value: 10
-        - stat: technique
-          op: add
           value: 3
         - stat: sanity
+          op: add
+          value: 4
+    - text: "临时起意，把断弦做成即兴 Solo"
+      skill_check:
+        stat: technique
+        difficulty: 45
+      success_text: "混乱里竟然炸出了一段美妙的东西。台下一片惊呼，那个瞬间变成了传奇。"
+      success_effects:
+        - stat: fame
+          op: add
+          value: 18
+        - stat: technique
+          op: add
+          value: 5
+        - stat: sanity
           op: subtract
-          value: 8
+          value: 5
+      fail_text: "你试图即兴，但完全跑调。全场沉默，你只好在尴尬中草草收场。"
+      fail_effects:
+        - stat: fame
+          op: subtract
+          value: 12
+        - stat: sanity
+          op: subtract
+          value: 12
+      effects: []
 
 # ─── 创作分歧 ────────────────────────────────────────────────
 - id: event_creative_dispute
+  cooldown: 6
   description: "排练室里气氛剑拔弩张。贝斯手说你的歌词太自我，鼓手不满你改编了他的鼓点。乐队快要分裂了。"
   trigger:
     and:
@@ -93,36 +122,36 @@
       - type: probability
         chance: 0.55
   choices:
-    - text: "坚持我的想法，是金子总会发光的"
-      result_text: "你没有退让。他们沉默了，但裂缝更深了。"
+    - text: "坚持自己的创作方向，不妥协"
+      result_text: "你没有退让。他们沉默了——也许是信服，也许是心寒。"
       effects:
         - stat: band_chemistry
           op: subtract
           value: 12
         - stat: artistic_integrity
           op: add
-          value: 5
-    - text: "听取大家的意见，一起修改"
-      result_text: "你们花了整晚争论，却写出了最好的一段副歌。"
-      effects:
-        - stat: band_chemistry
-          op: add
-          value: 15
-        - stat: artistic_integrity
-          op: subtract
-          value: 3
-    - text: "提议一起出去喝一杯，先冷静冷静"
-      result_text: "酒过三巡，大家把心里话都说了出来。矛盾没有解决，但空气松动了。"
-      effects:
-        - stat: band_chemistry
-          op: add
           value: 8
-        - stat: money
-          op: subtract
-          value: 80
-        - stat: sanity
+    - text: "试着说服他们接受你的想法"
+      skill_check:
+        stat: band_chemistry
+        difficulty: 40
+      success_text: "你解释了每个选择背后的逻辑，他们听进去了。最后大家围着白板重新改编，气氛热了起来。"
+      success_effects:
+        - stat: band_chemistry
           op: add
-          value: 5
+          value: 18
+        - stat: artistic_integrity
+          op: add
+          value: 3
+      fail_text: "你试图解释，但越说越像在争吵。最后大家冷着脸散了场，什么也没有解决。"
+      fail_effects:
+        - stat: band_chemistry
+          op: subtract
+          value: 8
+        - stat: sanity
+          op: subtract
+          value: 8
+      effects: []
 
 # ─── 万圣节演出 ──────────────────────────────────────────────
 - id: event_halloween_gig
@@ -161,6 +190,7 @@
 
 # ─── 设备故障 ────────────────────────────────────────────────
 - id: event_equipment_breakdown
+  cooldown: 8
   description: "排练到一半，你的DI盒发出一声异响，然后彻底死了。维修报价让你心跳停了半拍。"
   trigger:
     and:
@@ -220,6 +250,7 @@
 
 # ─── 健康危机 ────────────────────────────────────────────────
 - id: event_health_crisis
+  cooldown: 8
   description: "你在排练时突然晕倒了。醒来后医生告诉你，你已经三个月没有好好睡觉，身体发出了警告信号。"
   trigger:
     and:
@@ -230,36 +261,52 @@
       - type: probability
         chance: 0.7
   choices:
-    - text: "强制休息两周"
-      result_text: "你告诉队友你需要消失一段时间。他们理解，但也担心。"
+    - text: "听从医生，强制休养"
+      result_text: "你告诉队友你需要消失一段时间。他们理解，但也担心。名声停滞了，但你的身体开始恢复。"
       effects:
         - stat: health
           op: add
-          value: 25
+          value: 28
         - stat: sanity
           op: add
-          value: 10
+          value: 12
         - stat: fame
           op: subtract
           value: 5
         - stat: band_chemistry
           op: subtract
           value: 8
-    - text: "无视医生建议，继续演出"
-      result_text: "演出结束后你直接倒在了后台。"
-      effects:
+    - text: "撑过这场演出，之后再说"
+      skill_check:
+        stat: health
+        difficulty: 10
+      success_text: "你咬牙撑下来了。台下的人不知道你有多难受，但演出结束你直接瘫倒在后台椅子上。"
+      success_effects:
+        - stat: fame
+          op: add
+          value: 8
         - stat: health
+          op: subtract
+          value: 8
+        - stat: sanity
+          op: subtract
+          value: 5
+      fail_text: "你在台上撑不住了，被搀扶下场。下面传来一片议论声，场面混乱。"
+      fail_effects:
+        - stat: health
+          op: subtract
+          value: 20
+        - stat: sanity
           op: subtract
           value: 15
         - stat: fame
-          op: add
-          value: 5
-        - stat: sanity
           op: subtract
-          value: 10
+          value: 8
+      effects: []
 
 # ─── 精神崩溃 ────────────────────────────────────────────────
 - id: event_mental_breakdown
+  cooldown: 8
   description: "凌晨三点，你坐在地板上哭了很久，你自己都不知道为什么。一切都感觉毫无意义——音乐、梦想、还有未来。"
   trigger:
     and:
@@ -270,36 +317,36 @@
       - type: probability
         chance: 0.75
   choices:
-    - text: "联系心理咨询师"
-      result_text: "第一次咨询很贵，但咨询师说的某句话让你记了很久。"
+    - text: "打电话给朋友，聊到天亮"
+      result_text: "不需要解决什么，有人听就够了。你睡着的时候感觉好了一点点。"
       effects:
         - stat: sanity
           op: add
-          value: 20
-        - stat: money
-          op: subtract
-          value: 400
-        - stat: artistic_integrity
-          op: add
-          value: 5
-    - text: "打电话给最好的朋友"
-      result_text: "你们聊到天亮。不需要解决什么，有人听就够了。"
-      effects:
-        - stat: sanity
-          op: add
-          value: 15
+          value: 16
         - stat: band_chemistry
           op: add
           value: 8
-    - text: "写下来，把所有情绪写成歌词"
-      result_text: "那首歌你写了整整一夜，它可能是你写过最真实的东西。"
-      effects:
+    - text: "把这一切写成歌——今晚就写完"
+      skill_check:
+        stat: artistic_integrity
+        difficulty: 40
+      success_text: "天亮时你看着那首歌，它是你写过最真实的东西。情绪有了出口，你感觉某种东西松开了。"
+      success_effects:
         - stat: sanity
           op: add
-          value: 8
+          value: 20
         - stat: artistic_integrity
           op: add
-          value: 12
+          value: 15
+      fail_text: "你写了整整一夜，但最后把稿子揉成了一团扔掉了。什么也没有表达清楚，只是更累了。"
+      fail_effects:
+        - stat: sanity
+          op: subtract
+          value: 5
+        - stat: health
+          op: subtract
+          value: 8
+      effects: []
 
 # ─── 唱片公司兴趣 ────────────────────────────────────────────
 - id: event_label_interest
@@ -361,30 +408,48 @@
       - type: probability
         chance: 0.5
   choices:
-    - text: "接受！玩命准备"
-      result_text: "演出那天下着小雨，观众打着伞，你们打出了有生以来最好的一场。"
+    - text: "婉拒，我们还没准备好这种规模"
+      result_text: "你们目送那个机会离开。但组委会说明年还会联系你们——前提是你们还在。"
       effects:
+        - stat: technique
+          op: add
+          value: 10
+        - stat: sanity
+          op: add
+          value: 5
+    - text: "接受！全力备战这一场"
+      skill_check:
+        stat: technique
+        difficulty: 55
+      success_text: "演出那天下着小雨。观众打着伞，你们打出了有生以来最好的一场。那种感觉，终生难忘。"
+      success_effects:
         - stat: fame
           op: add
-          value: 30
+          value: 35
         - stat: technique
           op: add
           value: 5
         - stat: band_chemistry
           op: add
-          value: 15
+          value: 18
         - stat: money
           op: add
           value: 2000
-    - text: "感到没准备好，婉拒"
-      result_text: "你们目送那个机会离开。但也许明年你们会更强。"
-      effects:
-        - stat: technique
-          op: add
+      fail_text: "你们没有准备充分。在三千人面前走音，现场的静默比嘘声更难受。你们在后台一句话也没说。"
+      fail_effects:
+        - stat: fame
+          op: subtract
           value: 8
+        - stat: band_chemistry
+          op: subtract
+          value: 15
         - stat: sanity
-          op: add
-          value: 5
+          op: subtract
+          value: 12
+      effects:
+        - stat: health
+          op: subtract
+          value: 6
 
 # ─── 病毒式传播 ──────────────────────────────────────────────
 - id: event_viral_moment
@@ -401,26 +466,47 @@
       - type: probability
         chance: 0.22
   choices:
-    - text: "乘势推出新歌，趁热打铁"
-      result_text: "你们三天没睡，录了一首新歌。它没有那个片段火，但粉丝记住了你们。"
-      effects:
-        - stat: fame
-          op: add
-          value: 25
-        - stat: health
-          op: subtract
-          value: 10
-        - stat: sanity
-          op: subtract
-          value: 8
-    - text: "保持神秘，什么都不做"
-      result_text: "热度消退得很快，但你们的名字留在了一些人的记忆里。"
+    - text: "保持神秘，不蹭热度"
+      result_text: "热度消退得很快，但你们的名字留在了一些人心里。你们没有失去什么，也没有得到更多。"
       effects:
         - stat: fame
           op: add
           value: 12
         - stat: artistic_integrity
           op: add
+          value: 6
+    - text: "三天内赶出一首新歌，趁热打铁"
+      skill_check:
+        stat: technique
+        difficulty: 50
+      success_text: "你们三天没睡，但那首歌出来的时候连你们自己都愣住了。粉丝数当天翻了三倍。"
+      success_effects:
+        - stat: fame
+          op: add
+          value: 30
+        - stat: technique
+          op: add
+          value: 3
+        - stat: health
+          op: subtract
+          value: 8
+        - stat: sanity
+          op: subtract
+          value: 6
+      fail_text: "仓促赶出的歌质量很差。粉丝的评论很刺耳：「还不如不发」。热度提前散了。"
+      fail_effects:
+        - stat: fame
+          op: subtract
+          value: 5
+        - stat: sanity
+          op: subtract
+          value: 15
+        - stat: artistic_integrity
+          op: subtract
+          value: 5
+      effects:
+        - stat: health
+          op: subtract
           value: 5
 
 # ─── 商业广告邀约 ────────────────────────────────────────────
@@ -476,27 +562,39 @@
       - type: probability
         chance: 0.5
   choices:
-    - text: "尊重他的选择，送别他"
-      result_text: "你们喝了最后一次酒。他离开后，排练室安静得让人难受。"
+    - text: "尊重他的选择，好好送别"
+      result_text: "你们喝了最后一次酒。他离开后，排练室安静得让人难受。但你在心里给他送了祝福。"
       effects:
         - stat: band_chemistry
           op: subtract
           value: 20
         - stat: sanity
           op: subtract
-          value: 10
+          value: 8
         - stat: artistic_integrity
           op: add
-          value: 5
-    - text: "恳求他留下，并做出改变"
-      result_text: "他被你打动了，留了下来。但你知道你们都需要做出真正的改变。"
-      effects:
+          value: 6
+    - text: "恳求他再给乐队一次机会"
+      skill_check:
+        stat: band_chemistry
+        difficulty: 30
+      success_text: "你说了很多真心话。他沉默了很久，然后说：「再试三个月。」你们握了手。"
+      success_effects:
         - stat: band_chemistry
           op: add
-          value: 15
+          value: 18
         - stat: sanity
           op: subtract
           value: 5
+      fail_text: "你说的每一句话都像是在求饶。他的表情没有动摇。离开前他说：「你自己心里清楚为什么。」"
+      fail_effects:
+        - stat: band_chemistry
+          op: subtract
+          value: 15
+        - stat: sanity
+          op: subtract
+          value: 15
+      effects: []
 
 # ─── 排练突破 ────────────────────────────────────────────────
 - id: event_rehearsal_breakthrough

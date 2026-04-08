@@ -11,8 +11,8 @@
         ></span>
         <span class="ap-text">{{ currentAP }}/{{ MAX_AP }}</span>
       </div>
-      <span class="week-label">第 {{ week }} 周</span>
-      <button class="end-week-btn" @click="$emit('end-week')">结束本周 →</button>
+      <span class="week-label">第 {{ week }} 月</span>
+      <button class="end-week-btn" @click="$emit('end-week')">结束本月 →</button>
     </div>
 
     <!-- 5-action grid: 3+2 on mobile, 5-in-a-row on wide screens -->
@@ -130,6 +130,12 @@ function actionIcon(id: string): string { return icons[id] ?? '🎵'; }
   box-shadow: 0 0 10px rgba(224, 64, 251, 0.3);
 }
 
+.end-week-btn:active {
+  transform: scale(0.95);
+  background: rgba(224, 64, 251, 0.38);
+  transition: transform 0.06s, background 0.06s;
+}
+
 /* ── Action grid ── */
 /* Mobile: 3 columns; wider screens: 5 columns */
 .action-grid {
@@ -165,6 +171,13 @@ function actionIcon(id: string): string { return icons[id] ?? '🎵'; }
   background: rgba(224, 64, 251, 0.12);
   border-color: rgba(224, 64, 251, 0.5);
   transform: translateY(-2px);
+}
+
+.action-btn:active:not(:disabled) {
+  transform: scale(0.92);
+  background: rgba(224, 64, 251, 0.25);
+  border-color: rgba(224, 64, 251, 0.75);
+  transition: transform 0.06s, background 0.06s;
 }
 
 .action-btn:disabled {
